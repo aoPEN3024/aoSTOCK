@@ -3,249 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aoSTOCK - 塗料在庫管理</title>
+<title>aoSTOCK v2</title>
 <style>
   :root {
-    --blue: #1A3A5C;
-    --red: #C0392B;
-    --yellow: #F0C030;
-    --bg: #F5F6F8;
-    --white: #FFFFFF;
-    --gray1: #2C3E50;
-    --gray2: #7F8C8D;
-    --gray3: #BDC3C7;
-    --gray4: #ECF0F1;
-    --success: #27AE60;
-    --warn: #E67E22;
-    --danger: #E74C3C;
-    --radius: 10px;
-    --shadow: 0 2px 8px rgba(0,0,0,0.10);
+    --blue: #1A3A5C; --red: #C0392B; --yellow: #F0C030;
+    --bg: #F5F6F8; --white: #FFFFFF;
+    --gray1: #2C3E50; --gray2: #7F8C8D; --gray3: #BDC3C7; --gray4: #ECF0F1;
+    --success: #27AE60; --warn: #E67E22; --danger: #E74C3C;
+    --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,0.10);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: var(--bg); color: var(--gray1); min-height: 100vh; }
+  body { font-family: 'Hiragino Sans','Meiryo',sans-serif; background: var(--bg); color: var(--gray1); min-height: 100vh; }
 
-  /* Header */
-  .header {
-    background: var(--blue);
-    color: white;
-    padding: 0 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
+  .header { background: var(--blue); color: white; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
   .header-logo { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
   .header-logo span { color: var(--yellow); }
   .header-sync { font-size: 12px; color: var(--gray3); }
 
-  /* Tab nav */
-  .tabs {
-    display: flex;
-    background: var(--white);
-    border-bottom: 2px solid var(--gray4);
-    overflow-x: auto;
-    position: sticky;
-    top: 56px;
-    z-index: 99;
-  }
-  .tab {
-    flex: 1;
-    min-width: 72px;
-    padding: 10px 4px 8px;
-    text-align: center;
-    font-size: 11px;
-    color: var(--gray2);
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
+  .tabs { display: flex; background: var(--white); border-bottom: 2px solid var(--gray4); overflow-x: auto; position: sticky; top: 56px; z-index: 99; }
+  .tab { flex: 1; min-width: 60px; padding: 10px 4px 8px; text-align: center; font-size: 11px; color: var(--gray2); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; }
   .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
   .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
 
-  /* Pages */
   .page { display: none; padding: 16px; }
   .page.active { display: block; }
 
-  /* Cards */
-  .card {
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-  .card-title { font-size: 13px; color: var(--gray2); margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px; }
+  .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 13px; color: var(--gray2); margin-bottom: 8px; font-weight: 600; }
 
-  /* Stock list */
-  .stock-item {
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .stock-color-dot {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    border: 2px solid var(--gray4);
-  }
-  .stock-info { flex: 1; }
-  .stock-name { font-size: 15px; font-weight: 700; }
-  .stock-sub { font-size: 12px; color: var(--gray2); margin-top: 2px; }
-  .stock-qty { text-align: right; }
-  .stock-qty-num { font-size: 22px; font-weight: 900; }
-  .stock-qty-unit { font-size: 11px; color: var(--gray2); }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 700;
-    margin-top: 4px;
-  }
-  .badge-ok { background: #D5F5E3; color: var(--success); }
-  .badge-warn { background: #FDEBD0; color: var(--warn); }
-  .badge-danger { background: #FADBD8; color: var(--danger); }
-  .badge-order { background: #D6EAF8; color: var(--blue); }
-
-  /* Summary row */
-  .summary-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  .summary-box {
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 14px 10px;
-    text-align: center;
-  }
+  .summary-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .summary-box { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 10px; text-align: center; }
   .summary-num { font-size: 26px; font-weight: 900; }
   .summary-label { font-size: 10px; color: var(--gray2); margin-top: 2px; }
   .summary-num.red { color: var(--danger); }
   .summary-num.orange { color: var(--warn); }
   .summary-num.blue { color: var(--blue); }
 
-  /* FAB */
-  .fab {
-    position: fixed;
-    bottom: 24px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--red);
-    color: white;
-    font-size: 28px;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(192,57,43,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-    transition: transform 0.15s;
-  }
+  /* Paint accordion */
+  .paint-group { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; }
+  .paint-group-header { display: flex; align-items: center; padding: 14px 16px; cursor: pointer; gap: 12px; }
+  .paint-group-header:active { background: var(--gray4); }
+  .paint-group-name { flex: 1; font-size: 15px; font-weight: 700; }
+  .paint-group-meta { font-size: 12px; color: var(--gray2); margin-top: 2px; }
+  .paint-group-chevron { font-size: 16px; color: var(--gray3); transition: transform 0.2s; }
+  .paint-group.open .paint-group-chevron { transform: rotate(90deg); }
+  .paint-group-variants { display: none; border-top: 1px solid var(--gray4); }
+  .paint-group.open .paint-group-variants { display: block; }
+  .variant-row { display: flex; align-items: center; padding: 11px 16px 11px 44px; gap: 10px; border-bottom: 1px solid var(--gray4); }
+  .variant-row:last-child { border-bottom: none; }
+  .variant-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--gray4); flex-shrink: 0; }
+  .variant-info { flex: 1; }
+  .variant-name { font-size: 14px; font-weight: 600; }
+  .variant-code { font-size: 11px; color: var(--gray2); }
+  .variant-stock { text-align: right; }
+  .variant-stock-num { font-size: 20px; font-weight: 900; }
+  .variant-stock-unit { font-size: 10px; color: var(--gray2); }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; margin-top: 3px; }
+  .badge-ok { background: #D5F5E3; color: var(--success); }
+  .badge-warn { background: #FDEBD0; color: var(--warn); }
+  .badge-danger { background: #FADBD8; color: var(--danger); }
+  .badge-order { background: #D6EAF8; color: var(--blue); }
+  .loc-badge { display: inline-flex; align-items: center; gap: 3px; background: #EAF2FF; color: var(--blue); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-top: 3px; margin-left: 4px; }
+
+  /* Warehouse map */
+  .warehouse-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; margin-bottom: 14px; overflow-x: auto; }
+  .warehouse-title { font-size: 12px; font-weight: 700; color: var(--gray2); letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+  .warehouse-map { display: flex; flex-direction: column; gap: 6px; min-width: 280px; }
+  .wh-door-row { display: flex; justify-content: space-between; padding: 0 4px; }
+  .wh-door { background: var(--yellow); color: var(--gray1); font-size: 10px; font-weight: 700; padding: 4px 16px; border-radius: 4px; }
+  .wh-wall-top { background: var(--blue); color: white; font-size: 10px; padding: 5px 10px; border-radius: 6px; text-align: center; font-weight: 600; opacity: 0.85; }
+  .wh-shelf-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .wh-shelf { border-radius: 8px; padding: 8px 6px; cursor: pointer; transition: transform 0.15s; border: 2px solid transparent; position: relative; }
+  .wh-shelf:active { transform: scale(0.96); }
+  .wh-shelf.selected { border-color: var(--yellow); }
+  .wh-shelf-label { font-size: 18px; font-weight: 900; text-align: center; color: white; }
+  .wh-shelf-count { font-size: 10px; text-align: center; color: rgba(255,255,255,0.85); margin-top: 2px; }
+  .wh-shelf-alert { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
+
+  /* Shelf detail */
+  .shelf-tier { margin-bottom: 14px; }
+  .shelf-tier-label { font-size: 11px; font-weight: 700; color: var(--gray2); letter-spacing: 1px; margin-bottom: 6px; }
+  .shelf-slots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .shelf-slot { aspect-ratio: 1; border-radius: 4px; border: 1.5px solid var(--gray3); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; cursor: pointer; position: relative; overflow: visible; }
+  .shelf-slot.occupied { border-color: transparent; color: white; }
+  .shelf-slot.empty-slot { background: var(--gray4); color: var(--gray3); }
+  .shelf-slot-tooltip { display: none; position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: var(--gray1); color: white; font-size: 9px; padding: 3px 6px; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none; }
+  .shelf-slot:hover .shelf-slot-tooltip { display: block; }
+
+  .search-box { display: flex; align-items: center; background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 10px 14px; gap: 10px; margin-bottom: 14px; }
+  .search-box input { flex: 1; border: none; outline: none; font-size: 15px; font-family: inherit; color: var(--gray1); }
+
+  .section-label { font-size: 11px; font-weight: 700; color: var(--gray2); letter-spacing: 1px; margin: 16px 0 8px; text-transform: uppercase; }
+
+  .empty { text-align: center; color: var(--gray2); padding: 40px 20px; font-size: 14px; }
+  .loading { text-align: center; padding: 30px; color: var(--gray2); }
+
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--gray1); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 600; z-index: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  .fab { position: fixed; bottom: 24px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--red); color: white; font-size: 28px; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(192,57,43,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; transition: transform 0.15s; }
   .fab:active { transform: scale(0.92); }
 
-  /* Modal */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 300;
-    align-items: flex-end;
-  }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; align-items: flex-end; }
   .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--white);
-    border-radius: 18px 18px 0 0;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 20px 20px 40px;
-    animation: slideUp 0.25s ease;
-  }
+  .modal { background: var(--white); border-radius: 18px 18px 0 0; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px 20px 40px; animation: slideUp 0.25s ease; }
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   .modal-handle { width: 40px; height: 4px; background: var(--gray3); border-radius: 2px; margin: 0 auto 16px; }
   .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
 
-  /* Form */
   .form-group { margin-bottom: 14px; }
   .form-label { font-size: 12px; color: var(--gray2); font-weight: 600; margin-bottom: 6px; display: block; }
-  .form-input, .form-select, .form-textarea {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1.5px solid var(--gray3);
-    border-radius: 8px;
-    font-size: 15px;
-    font-family: inherit;
-    color: var(--gray1);
-    background: var(--white);
-    outline: none;
-    transition: border-color 0.2s;
-  }
+  .form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--gray3); border-radius: 8px; font-size: 15px; font-family: inherit; color: var(--gray1); background: var(--white); outline: none; transition: border-color 0.2s; }
   .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .form-textarea { height: 80px; resize: none; }
 
-  /* Buttons */
-  .btn {
-    padding: 13px 20px;
-    border-radius: 10px;
-    border: none;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 8px;
-    transition: opacity 0.15s;
-  }
+  .btn { padding: 13px 20px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 8px; transition: opacity 0.15s; }
   .btn:active { opacity: 0.8; }
   .btn-primary { background: var(--blue); color: white; }
   .btn-success { background: var(--success); color: white; }
   .btn-danger { background: var(--danger); color: white; }
   .btn-outline { background: transparent; color: var(--blue); border: 2px solid var(--blue); }
-  .btn-sm {
-    padding: 7px 14px;
-    font-size: 13px;
-    border-radius: 7px;
-    width: auto;
-    margin-top: 0;
-  }
+  .btn-sm { padding: 7px 14px; font-size: 13px; border-radius: 7px; width: auto; margin-top: 0; }
 
-  /* Transaction list */
-  .tx-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--gray4);
-    gap: 10px;
-  }
+  .tx-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gray4); gap: 10px; }
   .tx-item:last-child { border-bottom: none; }
-  .tx-type {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
+  .tx-type { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .tx-type.in { background: #D5F5E3; }
   .tx-type.out { background: #FADBD8; }
   .tx-body { flex: 1; }
@@ -255,303 +139,57 @@
   .tx-qty.in { color: var(--success); }
   .tx-qty.out { color: var(--danger); }
 
-  /* Order list */
-  .order-item {
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 14px 16px;
-    margin-bottom: 10px;
-  }
+  .order-item { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 10px; }
   .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   .order-name { font-size: 15px; font-weight: 700; }
   .order-meta { font-size: 12px; color: var(--gray2); }
   .order-actions { display: flex; gap: 8px; margin-top: 10px; }
 
-  /* Report */
-  .report-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--gray4);
-    font-size: 14px;
-  }
+  .report-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gray4); font-size: 14px; }
   .report-row:last-child { border-bottom: none; }
   .report-bar-wrap { height: 6px; background: var(--gray4); border-radius: 3px; margin-top: 4px; }
   .report-bar { height: 6px; background: var(--blue); border-radius: 3px; }
 
-  /* Search */
-  .search-box {
-    display: flex;
-    align-items: center;
-    background: var(--white);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    padding: 10px 14px;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-  .search-box input {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-size: 15px;
-    font-family: inherit;
-    color: var(--gray1);
-  }
-  .search-icon { font-size: 18px; color: var(--gray2); }
+  .stripe-accent { height: 4px; background: linear-gradient(90deg, var(--blue) 33%, var(--red) 33% 66%, var(--yellow) 66%); border-radius: 2px; margin-bottom: 16px; }
 
-  /* Section label */
-  .section-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--gray2);
-    letter-spacing: 1px;
-    margin: 16px 0 8px;
-    text-transform: uppercase;
-  }
-
-  .empty { text-align: center; color: var(--gray2); padding: 40px 20px; font-size: 14px; }
-
-  /* Loading */
-  .loading { text-align: center; padding: 30px; color: var(--gray2); }
-
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--gray1);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 24px;
-    font-size: 14px;
-    font-weight: 600;
-    z-index: 500;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  .toast.show { opacity: 1; }
-
-  /* Color picker row */
   .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .swatch {
-    width: 32px; height: 32px; border-radius: 50%;
-    border: 3px solid transparent;
-    cursor: pointer;
-    transition: transform 0.15s;
-  }
+  .swatch { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.15s; }
   .swatch.selected { border-color: var(--blue); transform: scale(1.15); }
 
-  /* Stripe accent */
-  .stripe-accent {
-    height: 4px;
-    background: linear-gradient(90deg, var(--blue) 33%, var(--red) 33% 66%, var(--yellow) 66%);
-    border-radius: 2px;
-    margin-bottom: 16px;
-  }
-
-  /* Warehouse Map */
-  .warehouse-wrap {
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 14px;
-    margin-bottom: 14px;
-    overflow-x: auto;
-  }
-  .warehouse-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--gray2);
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-  }
-  .warehouse-map {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 280px;
-  }
-  .wh-door-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 4px;
-  }
-  .wh-door {
-    background: var(--yellow);
-    color: var(--gray1);
-    font-size: 10px;
-    font-weight: 700;
-    padding: 4px 16px;
-    border-radius: 4px;
-    text-align: center;
-  }
-  .wh-wall-top {
-    background: var(--blue);
-    color: white;
-    font-size: 10px;
-    padding: 5px 10px;
-    border-radius: 6px;
-    text-align: center;
-    font-weight: 600;
-    opacity: 0.85;
-  }
-  .wh-shelf-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 6px;
-  }
-  .wh-shelf {
-    border-radius: 8px;
-    padding: 8px 6px;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-    border: 2px solid transparent;
-    position: relative;
-  }
-  .wh-shelf:active { transform: scale(0.96); }
-  .wh-shelf.selected { border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(240,192,48,0.3); }
-  .wh-shelf-label {
-    font-size: 18px;
-    font-weight: 900;
-    text-align: center;
-    color: white;
-  }
-  .wh-shelf-count {
-    font-size: 10px;
-    text-align: center;
-    color: rgba(255,255,255,0.85);
-    margin-top: 2px;
-  }
-  .wh-shelf-alert {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--yellow);
-  }
-  .shelf-full { background: #27AE60; }
-  .shelf-mid  { background: #2980B9; }
-  .shelf-low  { background: #E67E22; }
-  .shelf-empty{ background: #95A5A6; }
-
-  /* Shelf detail modal */
-  .shelf-tier {
-    margin-bottom: 14px;
-  }
-  .shelf-tier-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--gray2);
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-  }
-  .shelf-slots {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-  }
-  .shelf-slot {
-    aspect-ratio: 1;
-    border-radius: 4px;
-    border: 1.5px solid var(--gray3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 8px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.1s;
-    position: relative;
-    overflow: hidden;
-  }
-  .shelf-slot:active { transform: scale(0.9); }
-  .shelf-slot.occupied { border-color: transparent; color: white; }
-  .shelf-slot.empty-slot { background: var(--gray4); color: var(--gray3); }
-  .shelf-slot-tooltip {
-    display: none;
-    position: absolute;
-    bottom: 110%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--gray1);
-    color: white;
-    font-size: 9px;
-    padding: 3px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
-    z-index: 10;
-    pointer-events: none;
-  }
-  .shelf-slot:hover .shelf-slot-tooltip { display: block; }
-
-  /* Location badge in stock list */
-  .loc-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    background: #EAF2FF;
-    color: var(--blue);
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 20px;
-    margin-top: 4px;
-  }
+  /* Master list items */
+  .master-paint-item { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden; }
+  .master-paint-header { display: flex; align-items: center; padding: 14px 16px; gap: 12px; }
+  .master-paint-name { flex: 1; font-size: 15px; font-weight: 700; }
+  .master-paint-meta { font-size: 12px; color: var(--gray2); margin-top: 2px; }
+  .master-paint-actions { display: flex; gap: 6px; }
+  .master-variants { border-top: 1px solid var(--gray4); }
+  .master-variant-row { display: flex; align-items: center; padding: 10px 16px 10px 40px; gap: 10px; border-bottom: 1px solid var(--gray4); }
+  .master-variant-row:last-child { border-bottom: none; }
+  .divider { border: none; border-top: 1px solid var(--gray4); margin: 4px 0 14px; }
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="header">
   <div class="header-logo">ao<span>STOCK</span></div>
   <div class="header-sync" id="syncStatus">● 接続中...</div>
 </div>
 
-<!-- Tabs -->
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('home')">
-    <span class="tab-icon">🏠</span>在庫
-  </div>
-  <div class="tab" onclick="switchTab('inout')">
-    <span class="tab-icon">↕️</span>入出庫
-  </div>
-  <div class="tab" onclick="switchTab('order')">
-    <span class="tab-icon">📦</span>発注
-  </div>
-  <div class="tab" onclick="switchTab('report')">
-    <span class="tab-icon">📊</span>集計
-  </div>
-  <div class="tab" onclick="switchTab('master')">
-    <span class="tab-icon">⚙️</span>マスタ
-  </div>
+  <div class="tab active" onclick="switchTab('home')"><span class="tab-icon">🏠</span>在庫</div>
+  <div class="tab" onclick="switchTab('inout')"><span class="tab-icon">↕️</span>入出庫</div>
+  <div class="tab" onclick="switchTab('order')"><span class="tab-icon">📦</span>発注</div>
+  <div class="tab" onclick="switchTab('report')"><span class="tab-icon">📊</span>集計</div>
+  <div class="tab" onclick="switchTab('master')"><span class="tab-icon">⚙️</span>マスタ</div>
 </div>
 
 <!-- 在庫ページ -->
 <div class="page active" id="page-home">
   <div class="summary-row">
-    <div class="summary-box">
-      <div class="summary-num blue" id="totalItems">-</div>
-      <div class="summary-label">品目数</div>
-    </div>
-    <div class="summary-box">
-      <div class="summary-num orange" id="lowItems">-</div>
-      <div class="summary-label">要注意</div>
-    </div>
-    <div class="summary-box">
-      <div class="summary-num red" id="orderItems">-</div>
-      <div class="summary-label">発注中</div>
-    </div>
+    <div class="summary-box"><div class="summary-num blue" id="totalItems">-</div><div class="summary-label">品目数</div></div>
+    <div class="summary-box"><div class="summary-num orange" id="lowItems">-</div><div class="summary-label">要注意</div></div>
+    <div class="summary-box"><div class="summary-num red" id="orderItems">-</div><div class="summary-label">発注中</div></div>
   </div>
-  <!-- Warehouse Map -->
   <div class="warehouse-wrap">
     <div class="warehouse-title">🏭 倉庫マップ — タップで棚詳細</div>
     <div class="warehouse-map">
@@ -565,7 +203,7 @@
     </div>
   </div>
   <div class="search-box">
-    <span class="search-icon">🔍</span>
+    <span style="font-size:18px;color:var(--gray2)">🔍</span>
     <input type="text" placeholder="品名・色で検索..." id="searchInput" oninput="renderStockList()">
   </div>
   <div id="stockList"><div class="loading">読み込み中...</div></div>
@@ -577,9 +215,15 @@
   <div class="card">
     <div class="card-title">入出庫を記録する</div>
     <div class="form-group">
-      <label class="form-label">塗料</label>
-      <select class="form-select" id="txPaint">
+      <label class="form-label">塗料（大項目）</label>
+      <select class="form-select" id="txPaint" onchange="updateVariantSelect()">
         <option value="">-- 塗料を選択 --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">色・バリエーション</label>
+      <select class="form-select" id="txVariant">
+        <option value="">-- 先に塗料を選択 --</option>
       </select>
     </div>
     <div class="form-row">
@@ -612,7 +256,6 @@
     </div>
     <button class="btn btn-primary" onclick="recordTransaction()">記録する</button>
   </div>
-
   <div class="section-label">最近の入出庫</div>
   <div class="card" style="padding: 0 16px;">
     <div id="txList"><div class="loading">読み込み中...</div></div>
@@ -643,15 +286,10 @@
     </div>
   </div>
   <button class="btn btn-outline" style="margin-bottom:16px" onclick="generateReport()">集計する</button>
-
   <div class="section-label">工事別 使用量</div>
-  <div class="card" style="padding: 0 16px;">
-    <div id="reportByProject"><div class="empty">集計ボタンを押してください</div></div>
-  </div>
+  <div class="card" style="padding: 0 16px;"><div id="reportByProject"><div class="empty">集計ボタンを押してください</div></div></div>
   <div class="section-label">塗料別 使用量</div>
-  <div class="card" style="padding: 0 16px;">
-    <div id="reportByPaint"><div class="empty">集計ボタンを押してください</div></div>
-  </div>
+  <div class="card" style="padding: 0 16px;"><div id="reportByPaint"><div class="empty">集計ボタンを押してください</div></div></div>
 </div>
 
 <!-- マスタページ -->
@@ -659,45 +297,21 @@
   <div class="stripe-accent"></div>
   <div class="section-label">塗料マスタ</div>
   <div id="masterList"></div>
-  <button class="btn btn-outline" onclick="openModal('modalAddPaint')" style="margin-bottom:24px">＋ 塗料を追加</button>
-
+  <button class="btn btn-outline" onclick="openModal('modalAddPaint')" style="margin-bottom:24px">＋ 塗料（大項目）を追加</button>
   <div class="section-label">工事マスタ</div>
   <div id="projectMasterList"></div>
   <button class="btn btn-outline" onclick="openModal('modalAddProject')">＋ 工事を追加</button>
 </div>
 
-<!-- FAB -->
 <button class="fab" id="fab" onclick="onFab()">＋</button>
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Modal: 入出庫（FABから） -->
-<div class="modal-overlay" id="modalInOut" onclick="closeModalOverlay(event,'modalInOut')">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">入出庫を記録</div>
-    <!-- 入出庫ページと同じフォームをFABからも使えるよう、ページへ誘導 -->
-    <p style="color:var(--gray2);font-size:14px;text-align:center;margin-bottom:16px">「入出庫」タブから記録できます</p>
-    <button class="btn btn-primary" onclick="switchTab('inout');closeModal('modalInOut')">入出庫タブへ</button>
-  </div>
-</div>
-
-<!-- Modal: 塗料追加 -->
+<!-- Modal: 塗料（大項目）追加・編集 -->
 <div class="modal-overlay" id="modalAddPaint" onclick="closeModalOverlay(event,'modalAddPaint')">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">塗料を追加</div>
-    <div class="form-group">
-      <label class="form-label">既存からコピー（任意）</label>
-      <div style="display:flex;gap:8px">
-        <select class="form-select" id="copyFromPaint" style="flex:1">
-          <option value="">-- 既存塗料を選択 --</option>
-        </select>
-        <button class="btn btn-outline btn-sm" style="white-space:nowrap" onclick="copyFromExisting()">コピー</button>
-      </div>
-    </div>
-    <hr style="border:none;border-top:1px solid var(--gray4);margin:4px 0 14px">
+    <div class="modal-title" id="modalAddPaintTitle">塗料を追加</div>
+    <input type="hidden" id="editPaintId">
     <div class="form-group">
       <label class="form-label">品名</label>
       <input type="text" class="form-input" id="paintName" placeholder="例: エポキシ錆止め">
@@ -722,9 +336,27 @@
         <input type="number" class="form-input" id="paintReorder" placeholder="例: 3" value="3">
       </div>
     </div>
+    <button class="btn btn-success" id="paintSubmitBtn" onclick="submitPaint()">追加する</button>
+  </div>
+</div>
+
+<!-- Modal: バリエーション追加・編集 -->
+<div class="modal-overlay" id="modalAddVariant" onclick="closeModalOverlay(event,'modalAddVariant')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalVariantTitle">色バリエーションを追加</div>
+    <input type="hidden" id="variantPaintId">
+    <input type="hidden" id="editVariantId">
     <div class="form-group">
-      <label class="form-label">色</label>
-      <input type="text" class="form-input" id="paintColor" placeholder="例: グレー">
+      <label class="form-label">色名</label>
+      <input type="text" class="form-input" id="variantColor" placeholder="例: グレー">
+    </div>
+    <div class="form-group">
+      <label class="form-label">色番号・品番</label>
+      <input type="text" class="form-input" id="variantCode" placeholder="例: N-50">
+    </div>
+    <div class="form-group">
+      <label class="form-label">カラー</label>
       <div class="color-swatches">
         <div class="swatch" style="background:#808080" onclick="selectSwatch(this,'#808080')"></div>
         <div class="swatch" style="background:#C0392B" onclick="selectSwatch(this,'#C0392B')"></div>
@@ -734,41 +366,33 @@
         <div class="swatch" style="background:#FFFFFF;border:2px solid #BDC3C7" onclick="selectSwatch(this,'#FFFFFF')"></div>
         <div class="swatch" style="background:#2C3E50" onclick="selectSwatch(this,'#2C3E50')"></div>
         <div class="swatch" style="background:#E67E22" onclick="selectSwatch(this,'#E67E22')"></div>
+        <div class="swatch" style="background:#95A5A6" onclick="selectSwatch(this,'#95A5A6')"></div>
+        <div class="swatch" style="background:#E8D5B0" onclick="selectSwatch(this,'#E8D5B0')"></div>
       </div>
+      <input type="text" class="form-input" id="variantColorHex" placeholder="#808080" style="margin-top:8px;font-family:monospace" oninput="syncHexInput(this.value)">
     </div>
+    <hr class="divider">
     <div class="form-group">
       <label class="form-label">棚の場所（任意）</label>
-      <div class="form-row" style="grid-template-columns:1fr 1fr 2fr;">
-        <div>
-          <select class="form-select" id="paintShelf">
-            <option value="">棚</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-            <option value="D">D</option>
-            <option value="E">E</option>
-            <option value="F">F</option>
-          </select>
-        </div>
-        <div>
-          <select class="form-select" id="paintTier">
-            <option value="">段</option>
-            <option value="1">1段</option>
-            <option value="2">2段</option>
-            <option value="3">3段</option>
-            <option value="4">4段</option>
-          </select>
-        </div>
-        <div>
-          <input type="text" class="form-input" id="paintSlot" placeholder="例: 左から3列目" maxlength="20">
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px">
+        <select class="form-select" id="variantShelf">
+          <option value="">棚</option>
+          <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+          <option value="D">D</option><option value="E">E</option><option value="F">F</option>
+        </select>
+        <select class="form-select" id="variantTier">
+          <option value="">段</option>
+          <option value="1">1段</option><option value="2">2段</option>
+          <option value="3">3段</option><option value="4">4段</option>
+        </select>
+        <input type="text" class="form-input" id="variantSlot" placeholder="例: 左から3列目" maxlength="20">
       </div>
     </div>
     <div class="form-group">
       <label class="form-label">初期在庫（缶）</label>
-      <input type="number" class="form-input" id="paintInitStock" placeholder="例: 10" value="0">
+      <input type="number" class="form-input" id="variantInitStock" value="0" min="0">
     </div>
-    <button class="btn btn-success" onclick="addPaint()">追加する</button>
+    <button class="btn btn-success" id="variantSubmitBtn" onclick="submitVariant()">追加する</button>
   </div>
 </div>
 
@@ -805,22 +429,21 @@
   </div>
 </div>
 
-
 <!-- Modal: 棚詳細 -->
 <div class="modal-overlay" id="modalShelf" onclick="closeModalOverlay(event,'modalShelf')">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="shelfModalTitle">棚 A 詳細</div>
+    <div class="modal-title" id="shelfModalTitle">棚詳細</div>
     <div id="shelfTiers"></div>
     <button class="btn btn-outline" onclick="closeModal('modalShelf')" style="margin-top:12px">閉じる</button>
   </div>
 </div>
-<!-- Firebase CDN -->
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, getDocs, serverTimestamp, where
+  getFirestore, collection, collectionGroup, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -831,84 +454,122 @@ const firebaseConfig = {
   messagingSenderId: "151307146517",
   appId: "1:151307146517:web:7bd9a384c1b02f4e1f851c"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ---- State ----
-let paints = [];    // {id, name, maker, spec, price, reorder, color, colorHex, stock}
-let projects = [];  // {id, name, site, manager, start, end, active}
-let txs = [];       // {id, paintId, type, qty, projectId, note, ts}
-let orders = [];    // {id, paintId, qty, status, orderedAt, arrivedAt}
+let paints = [];    // {id, name, maker, spec, price, reorder}
+let variants = [];  // {id, paintId, color, code, colorHex, shelf, tier, slot, stock}
+let projects = [];
+let txs = [];
+let orders = [];
 
-// ---- Firestore Listeners ----
+// ---- Listeners ----
 onSnapshot(query(collection(db,'paints'), orderBy('name')), snap => {
-  paints = snap.docs.map(d => ({id:d.id,...d.data()}));
-  renderStockList();
-  updateSummary();
-  populatePaintSelects();
-  renderMasterList();
-  renderOrderPage();
-  renderWarehouseMap();
+  paints = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderAll();
   document.getElementById('syncStatus').textContent = '● 同期済';
 });
 
+onSnapshot(query(collectionGroup(db,'variants'), orderBy('color')), snap => {
+  variants = snap.docs.map(d=>({id:d.id, paintId:d.ref.parent.parent.id, ...d.data()}));
+  renderAll();
+});
+
 onSnapshot(query(collection(db,'projects'), orderBy('name')), snap => {
-  projects = snap.docs.map(d => ({id:d.id,...d.data()}));
-  populateProjectSelects();
+  projects = snap.docs.map(d=>({id:d.id,...d.data()}));
+  populateProjectSelect();
   renderProjectMasterList();
 });
 
 onSnapshot(query(collection(db,'transactions'), orderBy('ts','desc')), snap => {
-  txs = snap.docs.map(d => ({id:d.id,...d.data()}));
+  txs = snap.docs.map(d=>({id:d.id,...d.data()}));
   renderTxList();
 });
 
 onSnapshot(query(collection(db,'orders'), orderBy('orderedAt','desc')), snap => {
-  orders = snap.docs.map(d => ({id:d.id,...d.data()}));
+  orders = snap.docs.map(d=>({id:d.id,...d.data()}));
   renderOrderPage();
   updateSummary();
 });
 
-// ---- Render: Stock List ----
+function renderAll() {
+  renderStockList();
+  updateSummary();
+  renderMasterList();
+  renderOrderPage();
+  renderWarehouseMap();
+  populatePaintSelect();
+}
+
+// ---- Summary ----
+function updateSummary() {
+  document.getElementById('totalItems').textContent = variants.length;
+  document.getElementById('lowItems').textContent = variants.filter(v=>{
+    const p = paints.find(x=>x.id===v.paintId);
+    const r = p?.reorder||3;
+    return (v.stock||0) > 0 && (v.stock||0) <= r;
+  }).length;
+  document.getElementById('orderItems').textContent = orders.filter(o=>o.status==='ordering').length;
+}
+
+// ---- Stock List ----
 window.renderStockList = function() {
   const q = document.getElementById('searchInput').value.toLowerCase();
-  const filtered = paints.filter(p =>
-    p.name.toLowerCase().includes(q) || (p.color||'').toLowerCase().includes(q)
-  );
   const el = document.getElementById('stockList');
-  if (!filtered.length) { el.innerHTML = '<div class="empty">在庫データなし</div>'; return; }
-  el.innerHTML = filtered.map(p => {
-    const s = p.stock || 0;
-    const r = p.reorder || 3;
-    let badge, cls;
-    if (s <= 0) { badge='在庫切れ'; cls='badge-danger'; }
-    else if (s <= r) { badge='残少'; cls='badge-warn'; }
-    else { badge='在庫あり'; cls='badge-ok'; }
-    const isOrdering = orders.some(o => o.paintId===p.id && o.status==='ordering');
-    return `<div class="stock-item">
-      <div class="stock-color-dot" style="background:${p.colorHex||'#ccc'}"></div>
-      <div class="stock-info">
-        <div class="stock-name">${p.name}</div>
-        <div class="stock-sub">${p.maker||''} ${p.spec||''} ${p.color||''}</div>
-        <span class="badge ${cls}">${badge}</span>
-        ${isOrdering?'<span class="badge badge-order" style="margin-left:4px">発注中</span>':''}
-        ${p.shelf?`<span class="loc-badge">📍 棚${p.shelf}${p.tier?'-'+p.tier+'段':''}${p.slot?' '+p.slot:''}</span>`:''}
+  const filteredPaints = paints.filter(p => {
+    if (p.name.toLowerCase().includes(q)) return true;
+    return variants.some(v=>v.paintId===p.id && (v.color||'').toLowerCase().includes(q));
+  });
+  if (!filteredPaints.length) { el.innerHTML='<div class="empty">在庫データなし</div>'; return; }
+  el.innerHTML = filteredPaints.map(p => {
+    const pvs = variants.filter(v=>v.paintId===p.id);
+    const totalStock = pvs.reduce((s,v)=>s+(v.stock||0),0);
+    const hasLow = pvs.some(v=>(v.stock||0)>0&&(v.stock||0)<=(p.reorder||3));
+    const hasEmpty = pvs.some(v=>(v.stock||0)<=0);
+    return `<div class="paint-group" id="pg-${p.id}">
+      <div class="paint-group-header" onclick="toggleGroup('${p.id}')">
+        <div style="flex:1">
+          <div class="paint-group-name">${p.name}</div>
+          <div class="paint-group-meta">${p.maker||''} ${p.spec||''} — ${pvs.length}色 合計${totalStock}缶
+            ${hasEmpty?'<span class="badge badge-danger" style="margin-left:4px">在庫切れあり</span>':''}
+            ${hasLow?'<span class="badge badge-warn" style="margin-left:4px">残少あり</span>':''}
+          </div>
+        </div>
+        <span class="paint-group-chevron">›</span>
       </div>
-      <div class="stock-qty">
-        <div class="stock-qty-num">${s}</div>
-        <div class="stock-qty-unit">缶</div>
+      <div class="paint-group-variants">
+        ${pvs.length ? pvs.map(v => {
+          const s = v.stock||0;
+          const r = p.reorder||3;
+          let badge, cls;
+          if (s<=0){badge='在庫切れ';cls='badge-danger';}
+          else if(s<=r){badge='残少';cls='badge-warn';}
+          else{badge='在庫あり';cls='badge-ok';}
+          const isOrdering = orders.some(o=>o.variantId===v.id&&o.status==='ordering');
+          return `<div class="variant-row">
+            <div class="variant-dot" style="background:${v.colorHex||'#ccc'}"></div>
+            <div class="variant-info">
+              <div class="variant-name">${v.color||'（色未設定）'}</div>
+              <div class="variant-code">${v.code||''}</div>
+              <span class="badge ${cls}">${badge}</span>
+              ${isOrdering?'<span class="badge badge-order" style="margin-left:4px">発注中</span>':''}
+              ${v.shelf?`<span class="loc-badge">📍 棚${v.shelf}${v.tier?'-'+v.tier+'段':''}${v.slot?' '+v.slot:''}</span>`:''}
+            </div>
+            <div class="variant-stock">
+              <div class="variant-stock-num">${s}</div>
+              <div class="variant-stock-unit">缶</div>
+            </div>
+          </div>`;
+        }).join('') : '<div class="empty" style="padding:16px">色バリエーションなし</div>'}
       </div>
     </div>`;
   }).join('');
 };
 
-// ---- Summary ----
-function updateSummary() {
-  document.getElementById('totalItems').textContent = paints.length;
-  document.getElementById('lowItems').textContent = paints.filter(p=>(p.stock||0)<=(p.reorder||3)&&(p.stock||0)>0).length;
-  document.getElementById('orderItems').textContent = orders.filter(o=>o.status==='ordering').length;
-}
+window.toggleGroup = function(id) {
+  document.getElementById('pg-'+id)?.classList.toggle('open');
+};
 
 // ---- Tx List ----
 function renderTxList() {
@@ -916,13 +577,14 @@ function renderTxList() {
   const recent = txs.slice(0,30);
   if (!recent.length) { el.innerHTML='<div class="empty">記録なし</div>'; return; }
   el.innerHTML = recent.map(t => {
-    const p = paints.find(x=>x.id===t.paintId);
+    const v = variants.find(x=>x.id===t.variantId);
+    const p = v ? paints.find(x=>x.id===v.paintId) : null;
     const pj = projects.find(x=>x.id===t.projectId);
     const dt = t.ts?.toDate ? t.ts.toDate().toLocaleDateString('ja-JP') : '';
     return `<div class="tx-item">
       <div class="tx-type ${t.type}">${t.type==='in'?'📥':'📤'}</div>
       <div class="tx-body">
-        <div class="tx-name">${p?p.name:'不明'}</div>
+        <div class="tx-name">${p?p.name:'不明'}${v?' / '+v.color:''}</div>
         <div class="tx-meta">${pj?pj.name:''} ${dt} ${t.note?'・'+t.note:''}</div>
       </div>
       <div class="tx-qty ${t.type}">${t.type==='in'?'+':'-'}${t.qty}</div>
@@ -933,58 +595,56 @@ function renderTxList() {
 // ---- Record Transaction ----
 window.recordTransaction = async function() {
   const paintId = document.getElementById('txPaint').value;
+  const variantId = document.getElementById('txVariant').value;
   const type = document.getElementById('txType').value;
   const qty = parseFloat(document.getElementById('txQty').value);
   let projectId = document.getElementById('txProject').value;
   const note = document.getElementById('txNote').value;
 
   if (!paintId) { toast('塗料を選択してください'); return; }
-  if (!qty || qty <= 0) { toast('数量を入力してください'); return; }
+  if (!variantId) { toast('色・バリエーションを選択してください'); return; }
+  if (!qty || qty<=0) { toast('数量を入力してください'); return; }
 
-  // 新規工事
-  if (projectId === '__new__') {
+  if (projectId==='__new__') {
     const newName = document.getElementById('newProjectName').value.trim();
     if (!newName) { toast('工事名を入力してください'); return; }
     const ref = await addDoc(collection(db,'projects'), {name:newName, site:'', manager:'', active:true});
     projectId = ref.id;
   }
 
-  const paint = paints.find(p=>p.id===paintId);
-  if (!paint) return;
-  const newStock = (paint.stock||0) + (type==='in'?qty:-qty);
+  const variant = variants.find(v=>v.id===variantId);
+  if (!variant) return;
+  const newStock = (variant.stock||0) + (type==='in'?qty:-qty);
 
-  await addDoc(collection(db,'transactions'), {
-    paintId, type, qty, projectId, note, ts: serverTimestamp()
-  });
-  await updateDoc(doc(db,'paints',paintId), {stock: newStock});
+  await addDoc(collection(db,'transactions'), {variantId, paintId, type, qty, projectId, note, ts: serverTimestamp()});
+  await updateDoc(doc(db,'paints',paintId,'variants',variantId), {stock: newStock});
 
-  document.getElementById('txQty').value = '';
-  document.getElementById('txNote').value = '';
-  document.getElementById('txProject').value = '';
-  document.getElementById('txPaint').value = '';
+  ['txQty','txNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('txProject').value='';
+  document.getElementById('txPaint').value='';
+  document.getElementById('txVariant').innerHTML='<option value="">-- 先に塗料を選択 --</option>';
   toast(type==='in'?'入庫を記録しました':'出庫を記録しました');
 };
 
-// ---- Populate Selects ----
-function populatePaintSelects() {
-  // also populate copy-from select
-  const cpEl = document.getElementById('copyFromPaint');
-  if (cpEl) {
-    const cv = cpEl.value;
-    cpEl.innerHTML = '<option value="">-- 既存塗料を選択 --</option>' +
-      paints.map(p=>`<option value="${p.id}">${p.name}（${p.color||''}）</option>`).join('');
-    cpEl.value = cv;
-  }
-  ['txPaint'].forEach(id => {
-    const el = document.getElementById(id);
-    const v = el.value;
-    el.innerHTML = '<option value="">-- 塗料を選択 --</option>' +
-      paints.map(p=>`<option value="${p.id}">${p.name}（${p.color||''}）残${p.stock||0}缶</option>`).join('');
-    el.value = v;
-  });
+// ---- Selects ----
+function populatePaintSelect() {
+  const el = document.getElementById('txPaint');
+  const v = el.value;
+  el.innerHTML = '<option value="">-- 塗料を選択 --</option>' +
+    paints.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  el.value = v;
 }
 
-function populateProjectSelects() {
+window.updateVariantSelect = function() {
+  const paintId = document.getElementById('txPaint').value;
+  const el = document.getElementById('txVariant');
+  if (!paintId) { el.innerHTML='<option value="">-- 先に塗料を選択 --</option>'; return; }
+  const pvs = variants.filter(v=>v.paintId===paintId);
+  el.innerHTML = '<option value="">-- 色を選択 --</option>' +
+    pvs.map(v=>`<option value="${v.id}">${v.color||'（色未設定）'} ${v.code?'['+v.code+']':''} 残${v.stock||0}缶</option>`).join('');
+};
+
+function populateProjectSelect() {
   const el = document.getElementById('txProject');
   const v = el.value;
   el.innerHTML = '<option value="">-- 工事を選択 --</option>' +
@@ -992,39 +652,132 @@ function populateProjectSelects() {
     '<option value="__new__">＋ 新規工事を追加</option>';
   el.value = v;
 }
-
 document.getElementById('txProject').addEventListener('change', function() {
   document.getElementById('newProjectGroup').style.display = this.value==='__new__'?'block':'none';
 });
 
-// ---- Add Paint ----
-window.addPaint = async function() {
+// ---- Paint CRUD ----
+window.openAddPaint = function() {
+  document.getElementById('editPaintId').value = '';
+  document.getElementById('modalAddPaintTitle').textContent = '塗料を追加';
+  document.getElementById('paintSubmitBtn').textContent = '追加する';
+  ['paintName','paintMaker','paintSpec','paintPrice'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('paintReorder').value = '3';
+  openModal('modalAddPaint');
+};
+
+window.openEditPaint = function(id) {
+  const p = paints.find(x=>x.id===id);
+  if (!p) return;
+  document.getElementById('editPaintId').value = id;
+  document.getElementById('modalAddPaintTitle').textContent = '塗料を編集';
+  document.getElementById('paintSubmitBtn').textContent = '更新する';
+  document.getElementById('paintName').value = p.name||'';
+  document.getElementById('paintMaker').value = p.maker||'';
+  document.getElementById('paintSpec').value = p.spec||'';
+  document.getElementById('paintPrice').value = p.price||'';
+  document.getElementById('paintReorder').value = p.reorder||3;
+  openModal('modalAddPaint');
+};
+
+window.submitPaint = async function() {
   const name = document.getElementById('paintName').value.trim();
   if (!name) { toast('品名を入力してください'); return; }
-  const colorHex = document.getElementById('paintName').dataset.hex || '#888888';
-  await addDoc(collection(db,'paints'), {
+  const data = {
     name,
     maker: document.getElementById('paintMaker').value.trim(),
     spec: document.getElementById('paintSpec').value.trim(),
     price: parseFloat(document.getElementById('paintPrice').value)||0,
     reorder: parseFloat(document.getElementById('paintReorder').value)||3,
-    color: document.getElementById('paintColor').value.trim(),
-    colorHex: selectedSwatchHex || '#888888',
-    shelf: document.getElementById('paintShelf').value,
-    tier: document.getElementById('paintTier').value ? parseInt(document.getElementById('paintTier').value) : null,
-    slot: document.getElementById('paintSlot').value.trim(),
-    stock: parseFloat(document.getElementById('paintInitStock').value)||0
-  });
+  };
+  const editId = document.getElementById('editPaintId').value;
+  if (editId) {
+    await updateDoc(doc(db,'paints',editId), data);
+    toast('更新しました');
+  } else {
+    await addDoc(collection(db,'paints'), data);
+    toast('追加しました');
+  }
   closeModal('modalAddPaint');
-  toast('塗料を追加しました');
-  ['paintName','paintMaker','paintSpec','paintPrice','paintColor','paintInitStock','paintSlot'].forEach(id=>{
-    document.getElementById(id).value='';
-  });
-  document.getElementById('paintReorder').value='3';
-  document.getElementById('paintShelf').value='';
-  document.getElementById('paintTier').value='';
+};
+
+window.deletePaint = async function(id, name) {
+  if (!confirm(`「${name}」と全色バリエーションを削除しますか？`)) return;
+  // delete variants first
+  const pvs = variants.filter(v=>v.paintId===id);
+  await Promise.all(pvs.map(v=>deleteDoc(doc(db,'paints',id,'variants',v.id))));
+  await deleteDoc(doc(db,'paints',id));
+  toast('削除しました');
+};
+
+// ---- Variant CRUD ----
+window.openAddVariant = function(paintId) {
+  document.getElementById('variantPaintId').value = paintId;
+  document.getElementById('editVariantId').value = '';
+  document.getElementById('modalVariantTitle').textContent = '色バリエーションを追加';
+  document.getElementById('variantSubmitBtn').textContent = '追加する';
+  ['variantColor','variantCode','variantSlot'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('variantColorHex').value='';
+  document.getElementById('variantShelf').value='';
+  document.getElementById('variantTier').value='';
+  document.getElementById('variantInitStock').value='0';
   selectedSwatchHex = null;
   document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+  openModal('modalAddVariant');
+};
+
+window.openEditVariant = function(paintId, variantId) {
+  const v = variants.find(x=>x.id===variantId);
+  if (!v) return;
+  document.getElementById('variantPaintId').value = paintId;
+  document.getElementById('editVariantId').value = variantId;
+  document.getElementById('modalVariantTitle').textContent = '色バリエーションを編集';
+  document.getElementById('variantSubmitBtn').textContent = '更新する';
+  document.getElementById('variantColor').value = v.color||'';
+  document.getElementById('variantCode').value = v.code||'';
+  document.getElementById('variantColorHex').value = v.colorHex||'';
+  document.getElementById('variantShelf').value = v.shelf||'';
+  document.getElementById('variantTier').value = v.tier||'';
+  document.getElementById('variantSlot').value = v.slot||'';
+  document.getElementById('variantInitStock').value = v.stock||0;
+  selectedSwatchHex = v.colorHex||null;
+  document.querySelectorAll('.swatch').forEach(s=>{
+    s.classList.toggle('selected', s.style.background===v.colorHex);
+  });
+  openModal('modalAddVariant');
+};
+
+window.submitVariant = async function() {
+  const paintId = document.getElementById('variantPaintId').value;
+  const color = document.getElementById('variantColor').value.trim();
+  if (!color) { toast('色名を入力してください'); return; }
+  const editId = document.getElementById('editVariantId').value;
+  const hexInput = document.getElementById('variantColorHex').value.trim();
+  const colorHex = hexInput || selectedSwatchHex || '#888888';
+  const data = {
+    color,
+    code: document.getElementById('variantCode').value.trim(),
+    colorHex,
+    shelf: document.getElementById('variantShelf').value,
+    tier: document.getElementById('variantTier').value ? parseInt(document.getElementById('variantTier').value) : null,
+    slot: document.getElementById('variantSlot').value.trim(),
+  };
+  if (editId) {
+    await updateDoc(doc(db,'paints',paintId,'variants',editId), data);
+    toast('更新しました');
+  } else {
+    await addDoc(collection(db,'paints',paintId,'variants'), {
+      ...data, stock: parseFloat(document.getElementById('variantInitStock').value)||0
+    });
+    toast('追加しました');
+  }
+  closeModal('modalAddVariant');
+};
+
+window.deleteVariant = async function(paintId, variantId, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  await deleteDoc(doc(db,'paints',paintId,'variants',variantId));
+  toast('削除しました');
 };
 
 // ---- Add Project ----
@@ -1032,73 +785,81 @@ window.addProject = async function() {
   const name = document.getElementById('projName').value.trim();
   if (!name) { toast('工事名を入力してください'); return; }
   await addDoc(collection(db,'projects'), {
-    name,
-    site: document.getElementById('projSite').value.trim(),
+    name, site: document.getElementById('projSite').value.trim(),
     manager: document.getElementById('projManager').value.trim(),
     start: document.getElementById('projStart').value,
-    end: document.getElementById('projEnd').value,
-    active: true
+    end: document.getElementById('projEnd').value, active: true
   });
   closeModal('modalAddProject');
   toast('工事を追加しました');
 };
 
+window.deleteProject = async function(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  await deleteDoc(doc(db,'projects',id));
+  toast('削除しました');
+};
+
 // ---- Order Page ----
 function renderOrderPage() {
-  // 要発注
-  const low = paints.filter(p=>(p.stock||0)<=(p.reorder||3));
+  const low = variants.filter(v=>{
+    const p = paints.find(x=>x.id===v.paintId);
+    return (v.stock||0) <= (p?.reorder||3);
+  });
   const lowEl = document.getElementById('lowStockList');
   if (!low.length) { lowEl.innerHTML='<div class="empty">要発注品目なし 👍</div>'; }
   else {
-    lowEl.innerHTML = low.map(p=>`
-      <div class="order-item">
+    lowEl.innerHTML = low.map(v=>{
+      const p = paints.find(x=>x.id===v.paintId);
+      return `<div class="order-item">
         <div class="order-header">
           <div>
-            <div class="order-name">${p.name}</div>
-            <div class="order-meta">${p.color||''} 残${p.stock||0}缶 / 発注点${p.reorder||3}缶</div>
+            <div class="order-name">${p?p.name:'不明'} / ${v.color||''}</div>
+            <div class="order-meta">${v.code||''} 残${v.stock||0}缶 / 発注点${p?.reorder||3}缶</div>
           </div>
-          <span class="badge ${(p.stock||0)<=0?'badge-danger':'badge-warn'}">${(p.stock||0)<=0?'在庫切れ':'残少'}</span>
+          <span class="badge ${(v.stock||0)<=0?'badge-danger':'badge-warn'}">${(v.stock||0)<=0?'在庫切れ':'残少'}</span>
         </div>
         <div class="order-actions">
-          <button class="btn btn-primary btn-sm" onclick="createOrder('${p.id}')">発注する</button>
+          <button class="btn btn-primary btn-sm" onclick="createOrder('${v.paintId}','${v.id}')">発注する</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
-  // 発注中
   const ordering = orders.filter(o=>o.status==='ordering');
   const ordEl = document.getElementById('orderList');
   if (!ordering.length) { ordEl.innerHTML='<div class="empty">発注中なし</div>'; }
   else {
     ordEl.innerHTML = ordering.map(o=>{
-      const p = paints.find(x=>x.id===o.paintId);
+      const v = variants.find(x=>x.id===o.variantId);
+      const p = v ? paints.find(x=>x.id===v.paintId) : null;
       const dt = o.orderedAt?.toDate ? o.orderedAt.toDate().toLocaleDateString('ja-JP') : '';
       return `<div class="order-item">
         <div class="order-header">
           <div>
-            <div class="order-name">${p?p.name:'不明'}</div>
+            <div class="order-name">${p?p.name:'不明'}${v?' / '+v.color:''}</div>
             <div class="order-meta">発注日: ${dt} / ${o.qty}缶</div>
           </div>
           <span class="badge badge-order">発注中</span>
         </div>
         <div class="order-actions">
-          <button class="btn btn-success btn-sm" onclick="arrivedOrder('${o.id}','${o.paintId}',${o.qty})">入荷済み</button>
+          <button class="btn btn-success btn-sm" onclick="arrivedOrder('${o.id}','${o.paintId}','${o.variantId}',${o.qty})">入荷済み</button>
           <button class="btn btn-outline btn-sm" onclick="cancelOrder('${o.id}')">取消</button>
         </div>
       </div>`;
     }).join('');
   }
 
-  // 履歴
   const hist = orders.filter(o=>o.status!=='ordering');
   const histEl = document.getElementById('orderHistory');
   if (!hist.length) { histEl.innerHTML='<div class="empty">発注履歴なし</div>'; return; }
   histEl.innerHTML = hist.map(o=>{
-    const p = paints.find(x=>x.id===o.paintId);
+    const v = variants.find(x=>x.id===o.variantId);
+    const p = v ? paints.find(x=>x.id===v.paintId) : null;
     const dt = o.orderedAt?.toDate ? o.orderedAt.toDate().toLocaleDateString('ja-JP') : '';
     return `<div class="tx-item">
       <div class="tx-body">
-        <div class="tx-name">${p?p.name:'不明'} ${o.qty}缶</div>
+        <div class="tx-name">${p?p.name:'不明'}${v?' / '+v.color:''} ${o.qty}缶</div>
         <div class="tx-meta">${dt} ・ ${o.status==='arrived'?'入荷済':'取消'}</div>
       </div>
       <span class="badge ${o.status==='arrived'?'badge-ok':'badge-danger'}">${o.status==='arrived'?'入荷':'取消'}</span>
@@ -1106,23 +867,20 @@ function renderOrderPage() {
   }).join('');
 }
 
-window.createOrder = async function(paintId) {
-  const paint = paints.find(p=>p.id===paintId);
-  const qty = prompt(`${paint.name} の発注数量（缶）を入力:`, paint.reorder||3);
+window.createOrder = async function(paintId, variantId) {
+  const v = variants.find(x=>x.id===variantId);
+  const p = paints.find(x=>x.id===paintId);
+  const qty = prompt(`${p?.name} / ${v?.color} の発注数量（缶）:`, p?.reorder||3);
   if (!qty || isNaN(qty)) return;
-  await addDoc(collection(db,'orders'), {
-    paintId, qty: parseFloat(qty), status:'ordering', orderedAt: serverTimestamp()
-  });
+  await addDoc(collection(db,'orders'), {paintId, variantId, qty: parseFloat(qty), status:'ordering', orderedAt: serverTimestamp()});
   toast('発注を登録しました');
 };
 
-window.arrivedOrder = async function(orderId, paintId, qty) {
-  const paint = paints.find(p=>p.id===paintId);
+window.arrivedOrder = async function(orderId, paintId, variantId, qty) {
+  const v = variants.find(x=>x.id===variantId);
   await updateDoc(doc(db,'orders',orderId), {status:'arrived', arrivedAt: serverTimestamp()});
-  await updateDoc(doc(db,'paints',paintId), {stock: (paint.stock||0)+qty});
-  await addDoc(collection(db,'transactions'), {
-    paintId, type:'in', qty, projectId:'', note:'発注入荷', ts: serverTimestamp()
-  });
+  await updateDoc(doc(db,'paints',paintId,'variants',variantId), {stock: (v?.stock||0)+qty});
+  await addDoc(collection(db,'transactions'), {paintId, variantId, type:'in', qty, projectId:'', note:'発注入荷', ts: serverTimestamp()});
   toast('入荷処理しました');
 };
 
@@ -1136,75 +894,80 @@ window.generateReport = function() {
   const from = document.getElementById('reportFrom').value;
   const to = document.getElementById('reportTo').value;
   const outTxs = txs.filter(t => {
-    if (t.type !== 'out') return false;
+    if (t.type!=='out') return false;
     if (!t.ts?.toDate) return true;
     const d = t.ts.toDate().toISOString().slice(0,7);
-    if (from && d < from) return false;
-    if (to && d > to) return false;
+    if (from && d<from) return false;
+    if (to && d>to) return false;
     return true;
   });
-
-  // 工事別
   const byProject = {};
-  outTxs.forEach(t => {
+  outTxs.forEach(t=>{
     const pj = projects.find(p=>p.id===t.projectId);
-    const key = pj ? pj.name : '不明';
+    const key = pj?pj.name:'不明';
     byProject[key] = (byProject[key]||0)+t.qty;
   });
-  const maxPj = Math.max(...Object.values(byProject), 1);
+  const maxPj = Math.max(...Object.values(byProject),1);
   const pjEl = document.getElementById('reportByProject');
-  if (!Object.keys(byProject).length) { pjEl.innerHTML='<div class="empty">データなし</div>'; }
-  else {
-    pjEl.innerHTML = Object.entries(byProject).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
-      <div class="report-row">
-        <div style="flex:1">
-          <div>${k}</div>
-          <div class="report-bar-wrap"><div class="report-bar" style="width:${Math.round(v/maxPj*100)}%"></div></div>
-        </div>
-        <div style="margin-left:12px;font-weight:700">${v}缶</div>
-      </div>`).join('');
-  }
+  pjEl.innerHTML = Object.keys(byProject).length
+    ? Object.entries(byProject).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+        <div class="report-row"><div style="flex:1"><div>${k}</div>
+        <div class="report-bar-wrap"><div class="report-bar" style="width:${Math.round(v/maxPj*100)}%"></div></div>
+        </div><div style="margin-left:12px;font-weight:700">${v}缶</div></div>`).join('')
+    : '<div class="empty">データなし</div>';
 
-  // 塗料別
   const byPaint = {};
-  outTxs.forEach(t => {
-    const p = paints.find(x=>x.id===t.paintId);
-    const key = p ? p.name : '不明';
+  outTxs.forEach(t=>{
+    const v = variants.find(x=>x.id===t.variantId);
+    const p = v ? paints.find(x=>x.id===v.paintId) : null;
+    const key = p ? `${p.name} / ${v?.color||''}` : '不明';
     byPaint[key] = (byPaint[key]||0)+t.qty;
   });
-  const maxP = Math.max(...Object.values(byPaint), 1);
+  const maxP = Math.max(...Object.values(byPaint),1);
   const pEl = document.getElementById('reportByPaint');
-  if (!Object.keys(byPaint).length) { pEl.innerHTML='<div class="empty">データなし</div>'; }
-  else {
-    pEl.innerHTML = Object.entries(byPaint).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
-      <div class="report-row">
-        <div style="flex:1">
-          <div>${k}</div>
-          <div class="report-bar-wrap"><div class="report-bar" style="width:${Math.round(v/maxP*100)}%"></div></div>
-        </div>
-        <div style="margin-left:12px;font-weight:700">${v}缶</div>
-      </div>`).join('');
-  }
+  pEl.innerHTML = Object.keys(byPaint).length
+    ? Object.entries(byPaint).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+        <div class="report-row"><div style="flex:1"><div>${k}</div>
+        <div class="report-bar-wrap"><div class="report-bar" style="width:${Math.round(v/maxP*100)}%"></div></div>
+        </div><div style="margin-left:12px;font-weight:700">${v}缶</div></div>`).join('')
+    : '<div class="empty">データなし</div>';
 };
 
 // ---- Master List ----
 function renderMasterList() {
   const el = document.getElementById('masterList');
   if (!paints.length) { el.innerHTML='<div class="empty">塗料なし</div>'; return; }
-  el.innerHTML = paints.map(p=>`
-    <div class="stock-item">
-      <div class="stock-color-dot" style="background:${p.colorHex||'#ccc'}"></div>
-      <div class="stock-info">
-        <div class="stock-name">${p.name}</div>
-        <div class="stock-sub">${p.maker||''} ${p.spec||''} ${p.color||''} ¥${(p.price||0).toLocaleString()}/缶</div>
-        <div class="stock-sub">発注点: ${p.reorder||3}缶</div>
-        ${p.shelf?`<span class="loc-badge">📍 棚${p.shelf}${p.tier?'-'+p.tier+'段':''}${p.slot?' '+p.slot:''}</span>`:''}
+  el.innerHTML = paints.map(p=>{
+    const pvs = variants.filter(v=>v.paintId===p.id);
+    return `<div class="master-paint-item">
+      <div class="master-paint-header">
+        <div style="flex:1">
+          <div class="master-paint-name">${p.name}</div>
+          <div class="master-paint-meta">${p.maker||''} ${p.spec||''} ¥${(p.price||0).toLocaleString()}/缶 発注点${p.reorder||3}缶</div>
+        </div>
+        <div class="master-paint-actions">
+          <button class="btn btn-outline btn-sm" onclick="openEditPaint('${p.id}')">編集</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePaint('${p.id}','${p.name}')">削除</button>
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-        <button class="btn btn-outline btn-sm" onclick="openEditLocation('${p.id}','${p.name}','${p.shelf||''}','${p.tier||''}','${p.slot||''}')">場所変更</button>
-        <button class="btn btn-danger btn-sm" onclick="deletePaint('${p.id}','${p.name}')">削除</button>
+      <div class="master-variants">
+        ${pvs.map(v=>`<div class="master-variant-row">
+          <div class="variant-dot" style="background:${v.colorHex||'#ccc'}"></div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600">${v.color||'（色未設定）'} ${v.code?'['+v.code+']':''}</div>
+            <div style="font-size:11px;color:var(--gray2)">在庫${v.stock||0}缶${v.shelf?' / 棚'+v.shelf+(v.tier?'-'+v.tier+'段':'')+(v.slot?' '+v.slot:''):''}</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="openEditVariant('${p.id}','${v.id}')">編集</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteVariant('${p.id}','${v.id}','${v.color||''}')">削除</button>
+          </div>
+        </div>`).join('')}
+        <div style="padding:10px 16px 10px 44px">
+          <button class="btn btn-outline btn-sm" onclick="openAddVariant('${p.id}')">＋ 色を追加</button>
+        </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderProjectMasterList() {
@@ -1222,162 +985,100 @@ function renderProjectMasterList() {
     </div>`).join('');
 }
 
-window.deletePaint = async function(id, name) {
-  if (!confirm(`「${name}」を削除しますか？`)) return;
-  await deleteDoc(doc(db,'paints',id));
-  toast('削除しました');
-};
-
-window.deleteProject = async function(id, name) {
-  if (!confirm(`「${name}」を削除しますか？`)) return;
-  await deleteDoc(doc(db,'projects',id));
-  toast('削除しました');
-};
-
 // ---- Warehouse Map ----
 const SHELF_COLORS = {A:'#2980B9',B:'#27AE60',C:'#8E44AD',D:'#C0392B',E:'#E67E22',F:'#16A085'};
-
 window.renderWarehouseMap = function() {
-  const shelfIds = ['D','E','F','A','B','C'];
-  const rows = {
-    DEF: ['D','E','F'],
-    ABC: ['A','B','C']
-  };
-  ['DEF','ABC'].forEach(rowKey => {
+  [['DEF',['D','E','F']],['ABC',['A','B','C']]].forEach(([rowKey, shelves]) => {
     const el = document.getElementById('mapRow'+rowKey);
     if (!el) return;
-    el.innerHTML = rows[rowKey].map(shelf => {
-      const ps = paints.filter(p=>p.shelf===shelf);
-      const total = ps.reduce((s,p)=>s+(p.stock||0),0);
-      const hasLow = ps.some(p=>(p.stock||0)>0&&(p.stock||0)<=(p.reorder||3));
-      const hasEmpty = ps.some(p=>(p.stock||0)<=0&&p.shelf===shelf);
-      const bg = SHELF_COLORS[shelf]||'#666';
-      return `<div class="wh-shelf" style="background:${bg}" onclick="openShelfDetail('${shelf}')">
-        ${hasLow||hasEmpty?'<div class="wh-shelf-alert"></div>':''}
+    el.innerHTML = shelves.map(shelf => {
+      const svs = variants.filter(v=>v.shelf===shelf);
+      const total = svs.reduce((s,v)=>s+(v.stock||0),0);
+      const hasAlert = svs.some(v=>{
+        const p = paints.find(x=>x.id===v.paintId);
+        return (v.stock||0)<=(p?.reorder||3);
+      });
+      return `<div class="wh-shelf" style="background:${SHELF_COLORS[shelf]||'#666'}" onclick="openShelfDetail('${shelf}')">
+        ${hasAlert?'<div class="wh-shelf-alert"></div>':''}
         <div class="wh-shelf-label">${shelf}</div>
-        <div class="wh-shelf-count">${ps.length}品目 / ${total}缶</div>
+        <div class="wh-shelf-count">${svs.length}品目 / ${total}缶</div>
       </div>`;
     }).join('');
   });
 };
 
 window.openShelfDetail = function(shelf) {
-  const ps = paints.filter(p=>p.shelf===shelf);
+  const svs = variants.filter(v=>v.shelf===shelf);
   document.getElementById('shelfModalTitle').textContent = '棚 '+shelf+' の在庫';
-  const tiers = [1,2,3,4];
+  if (!svs.length) {
+    document.getElementById('shelfTiers').innerHTML='<div class="empty">この棚に登録された塗料なし</div>';
+    openModal('modalShelf'); return;
+  }
   let html = '';
-  tiers.forEach(tier => {
-    const tps = ps.filter(p=>p.tier===tier||(typeof p.tier==='string'&&parseInt(p.tier)===tier));
-    // 7スロット×3列=21
+  [1,2,3,4].forEach(tier => {
+    const tvs = svs.filter(v=>v.tier===tier||(typeof v.tier==='string'&&parseInt(v.tier)===tier));
     const slots = Array(21).fill(null);
-    tps.forEach(p => {
-      const qty = p.stock||0;
-      for(let i=0;i<Math.min(Math.ceil(qty),21);i++){
-        if(!slots[i]) slots[i]={paint:p,qty};
+    tvs.forEach(v => {
+      for(let i=0;i<Math.min(Math.ceil(v.stock||0),21);i++){
+        if(!slots[i]) slots[i]=v;
       }
     });
-    html += `<div class="shelf-tier">
-      <div class="shelf-tier-label">${tier}段目</div>
-      <div class="shelf-slots">`;
-    slots.forEach((s,i)=>{
+    html += `<div class="shelf-tier"><div class="shelf-tier-label">${tier}段目</div><div class="shelf-slots">`;
+    slots.forEach(s => {
       if(s){
-        const hex = s.paint.colorHex||'#888';
-        html += `<div class="shelf-slot occupied" style="background:${hex}">`
-              + `<div class="shelf-slot-tooltip">${s.paint.name}<br>${s.qty}缶</div>`
-              + `<span>${s.qty}</span></div>`;
+        const p = paints.find(x=>x.id===s.paintId);
+        html += `<div class="shelf-slot occupied" style="background:${s.colorHex||'#888'}">
+          <div class="shelf-slot-tooltip">${p?p.name:''}<br>${s.color||''}<br>${s.stock||0}缶</div>
+          <span>${s.stock||0}</span></div>`;
       } else {
         html += `<div class="shelf-slot empty-slot"><span>-</span></div>`;
       }
     });
     html += `</div></div>`;
   });
-  if(!ps.length) html = '<div class="empty">この棚に登録された塗料なし</div>';
   document.getElementById('shelfTiers').innerHTML = html;
   openModal('modalShelf');
 };
 
-// ---- Copy from existing paint ----
-window.copyFromExisting = function() {
-  const id = document.getElementById('copyFromPaint').value;
-  if (!id) { toast('コピー元の塗料を選択してください'); return; }
-  const p = paints.find(x=>x.id===id);
-  if (!p) return;
-  document.getElementById('paintName').value = p.name;
-  document.getElementById('paintMaker').value = p.maker||'';
-  document.getElementById('paintSpec').value = p.spec||'';
-  document.getElementById('paintPrice').value = p.price||'';
-  document.getElementById('paintReorder').value = p.reorder||3;
-  document.getElementById('paintColor').value = p.color||'';
-  document.getElementById('paintInitStock').value = 0;
-  document.getElementById('paintShelf').value = p.shelf||'';
-  document.getElementById('paintTier').value = p.tier||'';
-  document.getElementById('paintSlot').value = p.slot||'';
-  // set swatch
-  if (p.colorHex) {
-    selectedSwatchHex = p.colorHex;
-    document.querySelectorAll('.swatch').forEach(s => {
-      s.classList.toggle('selected', s.style.background === p.colorHex);
-    });
-  }
-  toast('コピーしました。変更して追加してください');
-};
-
-// openEditLocation exposed globally
-window.openEditLocation = function(id, name, shelf, tier, slot) {
-  const s = prompt(name+' の棚 (A-F):', shelf||'');
-  if(s===null) return;
-  const t = prompt('段数 (1-4):', tier||'');
-  if(t===null) return;
-  const sl = prompt('位置メモ (例: 左から3列目):', slot||'');
-  if(sl===null) return;
-  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(({getFirestore,doc,updateDoc})=>{
-    updateDoc(doc(getFirestore(),'paints',id),{
-      shelf: s.toUpperCase(),
-      tier: t ? parseInt(t) : null,
-      slot: sl
-    }).then(()=>toast('場所を更新しました'));
-  });
-};
-
-// ---- Set default report months ----
+// ---- Default report months ----
 const now = new Date();
 const ym = now.toISOString().slice(0,7);
 document.getElementById('reportFrom').value = ym;
 document.getElementById('reportTo').value = ym;
-
 </script>
 
 <script>
-// ---- Tab / Modal / UI (non-module) ----
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['home','inout','order','report','master'];
-    t.classList.toggle('active', names[i]===name);
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active',['home','inout','order','report','master'][i]===name);
   });
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.toggle('active', p.id==='page-'+name);
+  document.querySelectorAll('.page').forEach(p=>{
+    p.classList.toggle('active',p.id==='page-'+name);
   });
   document.getElementById('fab').style.display = name==='home'||name==='inout'?'flex':'none';
 }
 
 function onFab() {
-  const active = document.querySelector('.tab.active');
-  const tabNames = ['home','inout','order','report','master'];
-  const idx = [...document.querySelectorAll('.tab')].indexOf(active);
+  const idx = [...document.querySelectorAll('.tab')].indexOf(document.querySelector('.tab.active'));
   if (idx===0) switchTab('inout');
-  else if (idx===1) document.getElementById('txPaint').focus();
 }
 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function closeModalOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+function closeModalOverlay(e,id) { if(e.target===document.getElementById(id)) closeModal(id); }
 
 let selectedSwatchHex = null;
 function selectSwatch(el, hex) {
   document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
   el.classList.add('selected');
   selectedSwatchHex = hex;
+  document.getElementById('variantColorHex').value = hex;
 }
+
+window.syncHexInput = function(val) {
+  selectedSwatchHex = val;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+};
 
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -1385,6 +1086,10 @@ function toast(msg) {
   el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'), 2200);
 }
+
+// マスタページの塗料追加ボタンを上書き
+document.querySelector('[onclick="openModal(\'modalAddPaint\')"]')
+  ?.setAttribute('onclick', "openAddPaint()");
 </script>
 </body>
 </html>
