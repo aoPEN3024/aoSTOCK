@@ -162,7 +162,10 @@
   .master-paint-name { flex: 1; font-size: 15px; font-weight: 700; }
   .master-paint-meta { font-size: 12px; color: var(--gray2); margin-top: 2px; }
   .master-paint-actions { display: flex; gap: 6px; }
-  .master-variants { border-top: 1px solid var(--gray4); }
+  .master-variants { border-top: 1px solid var(--gray4); display: none; }
+  .master-paint-item.open .master-variants { display: block; }
+  .master-paint-item .paint-group-chevron { transition: transform 0.2s; }
+  .master-paint-item.open .paint-group-chevron { transform: rotate(90deg); }
   .master-variant-row { display: flex; align-items: center; padding: 10px 16px 10px 40px; gap: 10px; border-bottom: 1px solid var(--gray4); }
   .master-variant-row:last-child { border-bottom: none; }
   .divider { border: none; border-top: 1px solid var(--gray4); margin: 4px 0 14px; }
@@ -296,6 +299,10 @@
 <div class="page" id="page-master">
   <div class="stripe-accent"></div>
   <div class="section-label">塗料マスタ</div>
+  <div class="search-box">
+    <span style="font-size:18px;color:var(--gray2)">🔍</span>
+    <input type="text" placeholder="品名・色・色番号で検索..." id="masterSearchInput" oninput="renderMasterList()">
+  </div>
   <div id="masterList"></div>
   <button class="btn btn-outline" onclick="openModal('modalAddPaint')" style="margin-bottom:24px">＋ 塗料（大項目）を追加</button>
   <div class="section-label">工事マスタ</div>
@@ -937,15 +944,27 @@ window.generateReport = function() {
 function renderMasterList() {
   const el = document.getElementById('masterList');
   if (!paints.length) { el.innerHTML='<div class="empty">塗料なし</div>'; return; }
-  el.innerHTML = paints.map(p=>{
+  const q = (document.getElementById('masterSearchInput')?.value||'').toLowerCase();
+  const filtered = paints.filter(p => {
+    if (!q) return true;
+    if (p.name.toLowerCase().includes(q)) return true;
+    if ((p.maker||'').toLowerCase().includes(q)) return true;
+    return variants.some(v=>v.paintId===p.id && (
+      (v.color||'').toLowerCase().includes(q) || (v.code||'').toLowerCase().includes(q)
+    ));
+  });
+  if (!filtered.length) { el.innerHTML='<div class="empty">該当なし</div>'; return; }
+  const searching = q.length > 0;
+  el.innerHTML = filtered.map(p=>{
     const pvs = variants.filter(v=>v.paintId===p.id);
-    return `<div class="master-paint-item">
-      <div class="master-paint-header">
+    return `<div class="master-paint-item ${searching?'open':''}" id="mp-${p.id}">
+      <div class="master-paint-header" onclick="toggleMasterGroup(event,'${p.id}')" style="cursor:pointer">
+        <span class="paint-group-chevron" style="margin-right:4px">›</span>
         <div style="flex:1">
           <div class="master-paint-name">${p.name}</div>
-          <div class="master-paint-meta">${p.maker||''} ${p.spec||''} ¥${(p.price||0).toLocaleString()}/缶 発注点${p.reorder||3}缶</div>
+          <div class="master-paint-meta">${p.maker||''} ${p.spec||''} ¥${(p.price||0).toLocaleString()}/缶 発注点${p.reorder||3}缶 — ${pvs.length}色</div>
         </div>
-        <div class="master-paint-actions">
+        <div class="master-paint-actions" onclick="event.stopPropagation()">
           <button class="btn btn-outline btn-sm" onclick="openEditPaint('${p.id}')">編集</button>
           <button class="btn btn-danger btn-sm" onclick="deletePaint('${p.id}','${p.name}')">削除</button>
         </div>
@@ -969,6 +988,10 @@ function renderMasterList() {
     </div>`;
   }).join('');
 }
+
+window.toggleMasterGroup = function(e, id) {
+  document.getElementById('mp-'+id)?.classList.toggle('open');
+};
 
 function renderProjectMasterList() {
   const el = document.getElementById('projectMasterList');
