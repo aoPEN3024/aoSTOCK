@@ -82,14 +82,15 @@
   .wh-shelf-alert { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); }
 
   /* Shelf detail */
-  .shelf-tier { margin-bottom: 14px; }
-  .shelf-tier-label { font-size: 11px; font-weight: 700; color: var(--gray2); letter-spacing: 1px; margin-bottom: 6px; }
-  .shelf-slots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .shelf-slot { aspect-ratio: 1; border-radius: 4px; border: 1.5px solid var(--gray3); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; cursor: pointer; position: relative; overflow: visible; }
-  .shelf-slot.occupied { border-color: transparent; color: white; }
-  .shelf-slot.empty-slot { background: var(--gray4); color: var(--gray3); }
-  .shelf-slot-tooltip { display: none; position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: var(--gray1); color: white; font-size: 9px; padding: 3px 6px; border-radius: 4px; white-space: nowrap; z-index: 10; pointer-events: none; }
-  .shelf-slot:hover .shelf-slot-tooltip { display: block; }
+  .shelf-tier { margin-bottom: 18px; }
+  .shelf-tier-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 5px; border-bottom: 2px solid var(--gray4); margin-bottom: 4px; }
+  .shelf-tier-label { font-size: 12px; font-weight: 700; color: var(--blue); letter-spacing: 1px; }
+  .shelf-tier-total { font-size: 11px; color: var(--gray2); font-weight: 600; }
+  .shelf-tier-empty { font-size: 12px; color: var(--gray3); padding: 10px 4px; }
+  .shelf-paint-row { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--gray4); }
+  .shelf-paint-row:last-child { border-bottom: none; }
+  .shelf-paint-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shelf-paint-sub { font-size: 11px; color: var(--gray2); margin-top: 1px; }
 
   .search-box { display: flex; align-items: center; background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 10px 14px; gap: 10px; margin-bottom: 14px; }
   .search-box input { flex: 1; border: none; outline: none; font-size: 15px; font-family: inherit; color: var(--gray1); }
@@ -152,6 +153,9 @@
 
   .stripe-accent { height: 4px; background: linear-gradient(90deg, var(--blue) 33%, var(--red) 33% 66%, var(--yellow) 66%); border-radius: 2px; margin-bottom: 16px; }
 
+  .fixed-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 1px solid var(--gray4); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -2px 10px rgba(0,0,0,0.08); z-index: 150; }
+  .fixed-bar.show { display: block; }
+
   .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .swatch { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform 0.15s; }
   .swatch.selected { border-color: var(--blue); transform: scale(1.15); }
@@ -169,6 +173,13 @@
   .master-variant-row { display: flex; align-items: center; padding: 10px 16px 10px 40px; gap: 10px; border-bottom: 1px solid var(--gray4); }
   .master-variant-row:last-child { border-bottom: none; }
   .divider { border: none; border-top: 1px solid var(--gray4); margin: 4px 0 14px; }
+
+  .variant-recent { display: none; background: #F0F8F2; border: 1px solid #CDEBD6; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+  .variant-recent.show { display: block; }
+  .variant-recent-label { font-size: 10px; font-weight: 700; color: var(--success); letter-spacing: 0.5px; margin-bottom: 5px; }
+  .variant-recent-list { display: flex; flex-wrap: wrap; gap: 5px; }
+  .variant-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--white); border: 1px solid var(--gray3); border-radius: 20px; padding: 2px 8px 2px 3px; font-size: 11px; font-weight: 600; }
+  .variant-chip-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--gray4); }
 </style>
 </head>
 <body>
@@ -209,6 +220,7 @@
     <span style="font-size:18px;color:var(--gray2)">🔍</span>
     <input type="text" placeholder="品名・色で検索..." id="searchInput" oninput="renderStockList()">
   </div>
+  <button class="btn btn-outline" onclick="exportStockExcel()" style="margin-bottom:14px">📥 在庫一覧をExcel出力</button>
   <div id="stockList"><div class="loading">読み込み中...</div></div>
 </div>
 
@@ -219,6 +231,7 @@
     <div class="card-title">入出庫を記録する</div>
     <div class="form-group">
       <label class="form-label">塗料（大項目）</label>
+      <input type="text" class="form-input" id="txPaintSearch" placeholder="🔍 品名・色・色番号で絞り込み" oninput="onTxSearch()" style="margin-bottom:8px">
       <select class="form-select" id="txPaint" onchange="updateVariantSelect()">
         <option value="">-- 塗料を選択 --</option>
       </select>
@@ -301,13 +314,18 @@
   <div class="section-label">塗料マスタ</div>
   <div class="search-box">
     <span style="font-size:18px;color:var(--gray2)">🔍</span>
-    <input type="text" placeholder="品名・色・色番号で検索..." id="masterSearchInput" oninput="renderMasterList()">
+    <input type="text" placeholder="品名・色・色番号で検索..." id="masterSearchInput" oninput="onMasterSearch()">
   </div>
   <div id="masterList"></div>
-  <button class="btn btn-outline" onclick="openModal('modalAddPaint')" style="margin-bottom:24px">＋ 塗料（大項目）を追加</button>
   <div class="section-label">工事マスタ</div>
   <div id="projectMasterList"></div>
   <button class="btn btn-outline" onclick="openModal('modalAddProject')">＋ 工事を追加</button>
+  <div style="height:70px"></div>
+</div>
+
+<!-- マスタタブ固定バー -->
+<div class="fixed-bar" id="masterFixedBar">
+  <button class="btn btn-primary" style="margin-top:0" onclick="openAddPaint()">＋ 塗料（大項目）を追加</button>
 </div>
 
 <button class="fab" id="fab" onclick="onFab()">＋</button>
@@ -399,7 +417,11 @@
       <label class="form-label">初期在庫（缶）</label>
       <input type="number" class="form-input" id="variantInitStock" value="0" min="0">
     </div>
-    <button class="btn btn-success" id="variantSubmitBtn" onclick="submitVariant()">追加する</button>
+    <div id="variantRecent" class="variant-recent"></div>
+    <div id="variantBtnRow">
+      <button class="btn btn-success" id="variantSubmitBtn" onclick="submitVariant(false)">追加する</button>
+      <button class="btn btn-outline" id="variantSubmitNextBtn" onclick="submitVariant(true)">追加して次の色へ</button>
+    </div>
   </div>
 </div>
 
@@ -446,6 +468,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -470,6 +493,9 @@ let variants = [];  // {id, paintId, color, code, colorHex, shelf, tier, slot, s
 let projects = [];
 let txs = [];
 let orders = [];
+const masterOpenIds = new Set();
+let masterSearchTimer = null;
+const sessionAdded = [];
 
 // ---- Listeners ----
 onSnapshot(query(collection(db,'paints'), orderBy('name')), snap => {
@@ -626,20 +652,42 @@ window.recordTransaction = async function() {
   await addDoc(collection(db,'transactions'), {variantId, paintId, type, qty, projectId, note, ts: serverTimestamp()});
   await updateDoc(doc(db,'paints',paintId,'variants',variantId), {stock: newStock});
 
-  ['txQty','txNote'].forEach(id=>document.getElementById(id).value='');
+  ['txQty','txNote','txPaintSearch'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('txProject').value='';
+  populatePaintSelect();
   document.getElementById('txPaint').value='';
   document.getElementById('txVariant').innerHTML='<option value="">-- 先に塗料を選択 --</option>';
   toast(type==='in'?'入庫を記録しました':'出庫を記録しました');
 };
 
 // ---- Selects ----
+window.onTxSearch = function() {
+  populatePaintSelect();
+  const el = document.getElementById('txPaint');
+  // 候補が1件だけなら自動選択して色まで出す
+  if (el.options.length === 2) {
+    el.selectedIndex = 1;
+    updateVariantSelect();
+  } else {
+    document.getElementById('txVariant').innerHTML = '<option value="">-- 先に塗料を選択 --</option>';
+  }
+};
+
 function populatePaintSelect() {
   const el = document.getElementById('txPaint');
-  const v = el.value;
-  el.innerHTML = '<option value="">-- 塗料を選択 --</option>' +
-    paints.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  el.value = v;
+  const prev = el.value;
+  const q = (document.getElementById('txPaintSearch')?.value||'').toLowerCase();
+  const list = paints.filter(p => {
+    if (!q) return true;
+    if (p.name.toLowerCase().includes(q)) return true;
+    if ((p.maker||'').toLowerCase().includes(q)) return true;
+    return variants.some(v=>v.paintId===p.id && (
+      (v.color||'').toLowerCase().includes(q) || (v.code||'').toLowerCase().includes(q)
+    ));
+  });
+  el.innerHTML = (list.length ? '<option value="">-- 塗料を選択 --</option>' : '<option value="">-- 該当なし --</option>') +
+    list.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  if (list.some(p=>p.id===prev)) el.value = prev;
 }
 
 window.updateVariantSelect = function() {
@@ -719,10 +767,15 @@ window.deletePaint = async function(id, name) {
 
 // ---- Variant CRUD ----
 window.openAddVariant = function(paintId) {
+  const p = paints.find(x=>x.id===paintId);
   document.getElementById('variantPaintId').value = paintId;
   document.getElementById('editVariantId').value = '';
-  document.getElementById('modalVariantTitle').textContent = '色バリエーションを追加';
+  document.getElementById('modalVariantTitle').textContent = p ? `${p.name} — 色を追加` : '色バリエーションを追加';
   document.getElementById('variantSubmitBtn').textContent = '追加する';
+  document.getElementById('variantSubmitNextBtn').style.display = '';
+  sessionAdded.length = 0;
+  renderVariantRecent();
+  masterOpenIds.add(paintId);
   ['variantColor','variantCode','variantSlot'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('variantColorHex').value='';
   document.getElementById('variantShelf').value='';
@@ -740,6 +793,9 @@ window.openEditVariant = function(paintId, variantId) {
   document.getElementById('editVariantId').value = variantId;
   document.getElementById('modalVariantTitle').textContent = '色バリエーションを編集';
   document.getElementById('variantSubmitBtn').textContent = '更新する';
+  document.getElementById('variantSubmitNextBtn').style.display = 'none';
+  sessionAdded.length = 0;
+  renderVariantRecent();
   document.getElementById('variantColor').value = v.color||'';
   document.getElementById('variantCode').value = v.code||'';
   document.getElementById('variantColorHex').value = v.colorHex||'';
@@ -754,7 +810,7 @@ window.openEditVariant = function(paintId, variantId) {
   openModal('modalAddVariant');
 };
 
-window.submitVariant = async function() {
+window.submitVariant = async function(keepOpen) {
   const paintId = document.getElementById('variantPaintId').value;
   const color = document.getElementById('variantColor').value.trim();
   if (!color) { toast('色名を入力してください'); return; }
@@ -772,14 +828,35 @@ window.submitVariant = async function() {
   if (editId) {
     await updateDoc(doc(db,'paints',paintId,'variants',editId), data);
     toast('更新しました');
-  } else {
-    await addDoc(collection(db,'paints',paintId,'variants'), {
-      ...data, stock: parseFloat(document.getElementById('variantInitStock').value)||0
-    });
-    toast('追加しました');
+    closeModal('modalAddVariant');
+    return;
   }
-  closeModal('modalAddVariant');
+  await addDoc(collection(db,'paints',paintId,'variants'), {
+    ...data, stock: parseFloat(document.getElementById('variantInitStock').value)||0
+  });
+  if (!keepOpen) { closeModal('modalAddVariant'); toast('追加しました'); return; }
+
+  // 連続追加: 棚・段は引き継ぎ、色まわりだけリセット
+  sessionAdded.push({color, colorHex});
+  renderVariantRecent();
+  ['variantColor','variantCode'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('variantColorHex').value='';
+  document.getElementById('variantInitStock').value='0';
+  selectedSwatchHex = null;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+  document.getElementById('variantColor').focus();
+  toast(`「${color}」を追加（計${sessionAdded.length}色）`);
 };
+
+function renderVariantRecent() {
+  const el = document.getElementById('variantRecent');
+  if (!sessionAdded.length) { el.classList.remove('show'); el.innerHTML=''; return; }
+  el.classList.add('show');
+  el.innerHTML = `<div class="variant-recent-label">✓ この操作で追加した色（${sessionAdded.length}）</div>
+    <div class="variant-recent-list">${sessionAdded.map(v=>
+      `<span class="variant-chip"><span class="variant-chip-dot" style="background:${v.colorHex}"></span>${v.color}</span>`
+    ).join('')}</div>`;
+}
 
 window.deleteVariant = async function(paintId, variantId, name) {
   if (!confirm(`「${name}」を削除しますか？`)) return;
@@ -941,7 +1018,12 @@ window.generateReport = function() {
 };
 
 // ---- Master List ----
-function renderMasterList() {
+window.onMasterSearch = function() {
+  clearTimeout(masterSearchTimer);
+  masterSearchTimer = setTimeout(renderMasterList, 200);
+};
+
+window.renderMasterList = function() {
   const el = document.getElementById('masterList');
   if (!paints.length) { el.innerHTML='<div class="empty">塗料なし</div>'; return; }
   const q = (document.getElementById('masterSearchInput')?.value||'').toLowerCase();
@@ -956,41 +1038,56 @@ function renderMasterList() {
   if (!filtered.length) { el.innerHTML='<div class="empty">該当なし</div>'; return; }
   const searching = q.length > 0;
   el.innerHTML = filtered.map(p=>{
-    const pvs = variants.filter(v=>v.paintId===p.id);
-    return `<div class="master-paint-item ${searching?'open':''}" id="mp-${p.id}">
-      <div class="master-paint-header" onclick="toggleMasterGroup(event,'${p.id}')" style="cursor:pointer">
+    const count = variants.filter(v=>v.paintId===p.id).length;
+    const isOpen = searching || masterOpenIds.has(p.id);
+    return `<div class="master-paint-item ${isOpen?'open':''}" id="mp-${p.id}">
+      <div class="master-paint-header" onclick="toggleMasterGroup('${p.id}')" style="cursor:pointer">
         <span class="paint-group-chevron" style="margin-right:4px">›</span>
         <div style="flex:1">
           <div class="master-paint-name">${p.name}</div>
-          <div class="master-paint-meta">${p.maker||''} ${p.spec||''} ¥${(p.price||0).toLocaleString()}/缶 発注点${p.reorder||3}缶 — ${pvs.length}色</div>
+          <div class="master-paint-meta">${p.maker||''} ${p.spec||''} ¥${(p.price||0).toLocaleString()}/缶 発注点${p.reorder||3}缶 — ${count}色</div>
         </div>
         <div class="master-paint-actions" onclick="event.stopPropagation()">
           <button class="btn btn-outline btn-sm" onclick="openEditPaint('${p.id}')">編集</button>
           <button class="btn btn-danger btn-sm" onclick="deletePaint('${p.id}','${p.name}')">削除</button>
         </div>
       </div>
-      <div class="master-variants">
-        ${pvs.map(v=>`<div class="master-variant-row">
-          <div class="variant-dot" style="background:${v.colorHex||'#ccc'}"></div>
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:600">${v.color||'（色未設定）'} ${v.code?'['+v.code+']':''}</div>
-            <div style="font-size:11px;color:var(--gray2)">在庫${v.stock||0}缶${v.shelf?' / 棚'+v.shelf+(v.tier?'-'+v.tier+'段':'')+(v.slot?' '+v.slot:''):''}</div>
-          </div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-outline btn-sm" onclick="openEditVariant('${p.id}','${v.id}')">編集</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteVariant('${p.id}','${v.id}','${v.color||''}')">削除</button>
-          </div>
-        </div>`).join('')}
-        <div style="padding:10px 16px 10px 44px">
-          <button class="btn btn-outline btn-sm" onclick="openAddVariant('${p.id}')">＋ 色を追加</button>
-        </div>
-      </div>
+      <div class="master-variants" id="mv-${p.id}">${isOpen?masterVariantsHtml(p.id,q):''}</div>
     </div>`;
   }).join('');
 }
 
-window.toggleMasterGroup = function(e, id) {
-  document.getElementById('mp-'+id)?.classList.toggle('open');
+function masterVariantsHtml(paintId, q) {
+  const pvs = variants.filter(v=>v.paintId===paintId);
+  return pvs.map(v=>{
+    const hit = q && ((v.color||'').toLowerCase().includes(q) || (v.code||'').toLowerCase().includes(q));
+    return `<div class="master-variant-row"${hit?' style="background:#FFFBEA"':''}>
+      <div class="variant-dot" style="background:${v.colorHex||'#ccc'}"></div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${v.color||'（色未設定）'} ${v.code?'['+v.code+']':''}</div>
+        <div style="font-size:11px;color:var(--gray2)">在庫${v.stock||0}缶${v.shelf?' / 棚'+v.shelf+(v.tier?'-'+v.tier+'段':'')+(v.slot?' '+v.slot:''):''}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="openEditVariant('${paintId}','${v.id}')">編集</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteVariant('${paintId}','${v.id}','${v.color||''}')">削除</button>
+      </div>
+    </div>`;
+  }).join('') + `<div style="padding:10px 16px 10px 44px">
+    <button class="btn btn-outline btn-sm" onclick="openAddVariant('${paintId}')">＋ 色を追加</button>
+  </div>`;
+}
+
+window.toggleMasterGroup = function(id) {
+  const item = document.getElementById('mp-'+id);
+  const box = document.getElementById('mv-'+id);
+  if (!item || !box) return;
+  if (item.classList.contains('open')) {
+    masterOpenIds.delete(id);
+  } else {
+    if (!box.innerHTML) box.innerHTML = masterVariantsHtml(id, '');
+    masterOpenIds.add(id);
+  }
+  item.classList.toggle('open');
 };
 
 function renderProjectMasterList() {
@@ -1032,35 +1129,156 @@ window.renderWarehouseMap = function() {
 
 window.openShelfDetail = function(shelf) {
   const svs = variants.filter(v=>v.shelf===shelf);
-  document.getElementById('shelfModalTitle').textContent = '棚 '+shelf+' の在庫';
+  const total = svs.reduce((s,v)=>s+(v.stock||0),0);
+  document.getElementById('shelfModalTitle').textContent = `棚 ${shelf} — ${svs.length}品目 / 合計${total}缶`;
   if (!svs.length) {
     document.getElementById('shelfTiers').innerHTML='<div class="empty">この棚に登録された塗料なし</div>';
     openModal('modalShelf'); return;
   }
+  const tierNum = v => (typeof v.tier==='string' ? parseInt(v.tier) : v.tier);
   let html = '';
   [1,2,3,4].forEach(tier => {
-    const tvs = svs.filter(v=>v.tier===tier||(typeof v.tier==='string'&&parseInt(v.tier)===tier));
-    const slots = Array(21).fill(null);
-    tvs.forEach(v => {
-      for(let i=0;i<Math.min(Math.ceil(v.stock||0),21);i++){
-        if(!slots[i]) slots[i]=v;
-      }
-    });
-    html += `<div class="shelf-tier"><div class="shelf-tier-label">${tier}段目</div><div class="shelf-slots">`;
-    slots.forEach(s => {
-      if(s){
-        const p = paints.find(x=>x.id===s.paintId);
-        html += `<div class="shelf-slot occupied" style="background:${s.colorHex||'#888'}">
-          <div class="shelf-slot-tooltip">${p?p.name:''}<br>${s.color||''}<br>${s.stock||0}缶</div>
-          <span>${s.stock||0}</span></div>`;
-      } else {
-        html += `<div class="shelf-slot empty-slot"><span>-</span></div>`;
-      }
-    });
-    html += `</div></div>`;
+    const tvs = svs.filter(v=>tierNum(v)===tier);
+    const tierTotal = tvs.reduce((s,v)=>s+(v.stock||0),0);
+    html += `<div class="shelf-tier">
+      <div class="shelf-tier-head">
+        <span class="shelf-tier-label">${tier}段目</span>
+        <span class="shelf-tier-total">${tvs.length}品目 / ${tierTotal}缶 <span style="color:var(--gray3)">(最大21缶)</span></span>
+      </div>`;
+    if (!tvs.length) {
+      html += `<div class="shelf-tier-empty">空き</div>`;
+    } else {
+      html += tvs.map(v=>{
+        const p = paints.find(x=>x.id===v.paintId);
+        const s = v.stock||0;
+        const r = p?.reorder||3;
+        let cls = s<=0 ? 'badge-danger' : (s<=r ? 'badge-warn' : 'badge-ok');
+        let label = s<=0 ? '在庫切れ' : (s<=r ? '残少' : '在庫あり');
+        return `<div class="shelf-paint-row">
+          <div class="variant-dot" style="background:${v.colorHex||'#ccc'}"></div>
+          <div style="flex:1;min-width:0">
+            <div class="shelf-paint-name">${p?p.name:'不明'}</div>
+            <div class="shelf-paint-sub">${v.color||''} ${v.code?'['+v.code+']':''}${v.slot?' ・ '+v.slot:''}</div>
+            <span class="badge ${cls}">${label}</span>
+          </div>
+          <div class="variant-stock">
+            <div class="variant-stock-num">${s}</div>
+            <div class="variant-stock-unit">缶</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    html += `</div>`;
   });
+  const noTier = svs.filter(v=>!tierNum(v));
+  if (noTier.length) {
+    html += `<div class="shelf-tier">
+      <div class="shelf-tier-head"><span class="shelf-tier-label">段未設定</span></div>` +
+      noTier.map(v=>{
+        const p = paints.find(x=>x.id===v.paintId);
+        return `<div class="shelf-paint-row">
+          <div class="variant-dot" style="background:${v.colorHex||'#ccc'}"></div>
+          <div style="flex:1;min-width:0">
+            <div class="shelf-paint-name">${p?p.name:'不明'}</div>
+            <div class="shelf-paint-sub">${v.color||''} ${v.code?'['+v.code+']':''}</div>
+          </div>
+          <div class="variant-stock">
+            <div class="variant-stock-num">${v.stock||0}</div>
+            <div class="variant-stock-unit">缶</div>
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
+  }
   document.getElementById('shelfTiers').innerHTML = html;
   openModal('modalShelf');
+};
+
+// ---- Excel Export ----
+window.exportStockExcel = function() {
+  if (typeof XLSX === 'undefined') { toast('Excelライブラリ読込中です。少し待って再試行してください'); return; }
+  if (!variants.length) { toast('出力する在庫データがありません'); return; }
+
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  const shown = paints.filter(p => {
+    if (!q) return true;
+    if (p.name.toLowerCase().includes(q)) return true;
+    return variants.some(v=>v.paintId===p.id && (v.color||'').toLowerCase().includes(q));
+  });
+  const rows = [];
+  shown.forEach(p => {
+    variants.filter(v=>v.paintId===p.id).forEach(v => {
+      const s = v.stock||0;
+      const r = p.reorder||3;
+      const isOrdering = orders.some(o=>o.variantId===v.id&&o.status==='ordering');
+      rows.push({
+        '品名': p.name,
+        'メーカー': p.maker||'',
+        '規格': p.spec||'',
+        '色': v.color||'',
+        '色番号': v.code||'',
+        '在庫数(缶)': s,
+        '発注点(缶)': r,
+        '状態': s<=0?'在庫切れ':(s<=r?'残少':'在庫あり'),
+        '発注中': isOrdering?'○':'',
+        '棚': v.shelf||'',
+        '段': v.tier||'',
+        '位置メモ': v.slot||'',
+        '単価(円)': p.price||0,
+        '在庫金額(円)': Math.round((p.price||0)*s),
+      });
+    });
+  });
+  if (!rows.length) { toast('該当する在庫がありません'); return; }
+
+  rows.sort((a,b)=> a['品名'].localeCompare(b['品名'],'ja') || a['色'].localeCompare(b['色'],'ja'));
+
+  const totalCans = rows.reduce((s,r)=>s+r['在庫数(缶)'],0);
+  const totalYen  = rows.reduce((s,r)=>s+r['在庫金額(円)'],0);
+
+  const wb = XLSX.utils.book_new();
+
+  // シート1: 在庫一覧
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    {wch:24},{wch:14},{wch:10},{wch:14},{wch:10},{wch:10},{wch:10},
+    {wch:9},{wch:7},{wch:5},{wch:5},{wch:16},{wch:10},{wch:12}
+  ];
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:13}}) };
+  ws['!freeze'] = { xSplit:0, ySplit:1 };
+  XLSX.utils.book_append_sheet(wb, ws, '在庫一覧');
+
+  // シート2: 棚別サマリー
+  const byShelf = {};
+  rows.forEach(r => {
+    const k = r['棚'] || '(未設定)';
+    if (!byShelf[k]) byShelf[k] = {品目数:0, 在庫合計缶:0, 在庫金額:0};
+    byShelf[k].品目数++;
+    byShelf[k].在庫合計缶 += r['在庫数(缶)'];
+    byShelf[k].在庫金額 += r['在庫金額(円)'];
+  });
+  const shelfRows = Object.entries(byShelf)
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([k,v])=>({'棚':k, '品目数':v.品目数, '在庫合計(缶)':v.在庫合計缶, '在庫金額(円)':v.在庫金額}));
+  shelfRows.push({'棚':'合計', '品目数':rows.length, '在庫合計(缶)':totalCans, '在庫金額(円)':totalYen});
+  const ws2 = XLSX.utils.json_to_sheet(shelfRows);
+  ws2['!cols'] = [{wch:10},{wch:10},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws2, '棚別サマリー');
+
+  // シート3: 要発注リスト
+  const lowRows = rows.filter(r=>r['状態']!=='在庫あり')
+    .map(r=>({'品名':r['品名'],'色':r['色'],'色番号':r['色番号'],'在庫数(缶)':r['在庫数(缶)'],
+              '発注点(缶)':r['発注点(缶)'],'状態':r['状態'],'発注中':r['発注中'],
+              '棚':r['棚'],'段':r['段']}));
+  if (lowRows.length) {
+    const ws3 = XLSX.utils.json_to_sheet(lowRows);
+    ws3['!cols'] = [{wch:24},{wch:14},{wch:10},{wch:10},{wch:10},{wch:9},{wch:7},{wch:5},{wch:5}];
+    XLSX.utils.book_append_sheet(wb, ws3, '要発注リスト');
+  }
+
+  const d = new Date();
+  const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(wb, `aoSTOCK_在庫一覧_${stamp}.xlsx`);
+  toast(`${rows.length}件を出力しました`);
 };
 
 // ---- Default report months ----
@@ -1079,6 +1297,7 @@ function switchTab(name) {
     p.classList.toggle('active',p.id==='page-'+name);
   });
   document.getElementById('fab').style.display = name==='home'||name==='inout'?'flex':'none';
+  document.getElementById('masterFixedBar').classList.toggle('show', name==='master');
 }
 
 function onFab() {
@@ -1110,9 +1329,6 @@ function toast(msg) {
   setTimeout(()=>el.classList.remove('show'), 2200);
 }
 
-// マスタページの塗料追加ボタンを上書き
-document.querySelector('[onclick="openModal(\'modalAddPaint\')"]')
-  ?.setAttribute('onclick', "openAddPaint()");
 </script>
 </body>
 </html>
