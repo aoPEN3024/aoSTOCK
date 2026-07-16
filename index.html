@@ -70,8 +70,25 @@
   .warehouse-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; margin-bottom: 14px; overflow-x: auto; }
   .warehouse-title { font-size: 12px; font-weight: 700; color: var(--gray2); letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
   .warehouse-map { display: flex; flex-direction: column; gap: 6px; min-width: 280px; }
-  .wh-door-row { display: flex; justify-content: space-between; padding: 0 4px; }
-  .wh-door { background: var(--yellow); color: var(--gray1); font-size: 10px; font-weight: 700; padding: 4px 16px; border-radius: 4px; }
+  .wh-body { display: grid; grid-template-columns: 1fr 118px; gap: 12px; align-items: stretch; }
+  .wh-building { border: 2px solid var(--gray3); border-radius: 8px; background: var(--white); padding: 6px; display: flex; flex-direction: column; gap: 6px; }
+  .wh-building-label { font-size: 9px; font-weight: 700; color: var(--gray2); letter-spacing: 1px; text-align: center; }
+  .wh-building-thinner { border-color: #8E44AD; border-style: dashed; background: rgba(142,68,173,0.04); }
+  .wh-building-thinner .wh-building-label { color: #8E44AD; }
+  .wh-main { display: flex; flex-direction: column; gap: 6px; }
+  .wh-room-inner { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .wh-room-mid { flex: 1; display: grid; grid-template-columns: 32px 1fr 32px; gap: 4px; min-height: 74px; }
+  .wh-room-floor { border-radius: 4px; background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(142,68,173,0.07) 4px, rgba(142,68,173,0.07) 8px); }
+  .wh-room-top .wh-shelf { padding: 5px 4px; }
+  .wh-room-top .wh-shelf-label { font-size: 14px; }
+  .wh-room-side { display: flex; }
+  .wh-room-side .wh-shelf { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 1px; }
+  .wh-room-side .wh-shelf-label { font-size: 14px; }
+  .wh-room-side .wh-shelf-count { writing-mode: vertical-rl; font-size: 9px; margin-top: 4px; letter-spacing: 0; line-height: 1; }
+  .wh-room-side .wh-shelf-alert { width: 6px; height: 6px; top: 2px; right: 2px; }
+  .wh-door-row { display: flex; justify-content: space-between; padding: 0 2px; }
+  .wh-door-row-center { justify-content: center; }
+  .wh-door { background: var(--yellow); color: var(--gray1); font-size: 10px; font-weight: 700; padding: 3px 14px; border-radius: 3px; text-align: center; }
   .wh-wall-top { background: var(--blue); color: white; font-size: 10px; padding: 5px 10px; border-radius: 6px; text-align: center; font-weight: 600; opacity: 0.85; }
   .wh-shelf-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
   .wh-shelf { border-radius: 8px; padding: 8px 6px; cursor: pointer; transition: transform 0.15s; border: 2px solid transparent; position: relative; }
@@ -207,12 +224,35 @@
   <div class="warehouse-wrap">
     <div class="warehouse-title">🏭 倉庫マップ — タップで棚詳細</div>
     <div class="warehouse-map">
-      <div class="wh-wall-top">機材・資材棚（今後塗料置き場として使う可能性あり）</div>
-      <div class="wh-shelf-row" id="mapRowDEF"></div>
-      <div class="wh-shelf-row" id="mapRowABC"></div>
-      <div class="wh-door-row">
-        <div class="wh-door">出入口</div>
-        <div class="wh-door">出入口</div>
+      <div class="wh-body">
+        <!-- 倉庫棟 -->
+        <div class="wh-building">
+          <div class="wh-building-label">倉庫</div>
+          <div class="wh-wall-top">機材・資材棚（今後塗料置き場として使う可能性あり）</div>
+          <div class="wh-main">
+            <div class="wh-shelf-row" id="mapRowDEF"></div>
+            <div class="wh-shelf-row" id="mapRowABC"></div>
+          </div>
+          <div class="wh-door-row">
+            <div class="wh-door">出入口</div>
+            <div class="wh-door">出入口</div>
+          </div>
+        </div>
+        <!-- シンナー庫棟 -->
+        <div class="wh-building wh-building-thinner">
+          <div class="wh-building-label">シンナー庫</div>
+          <div class="wh-room-inner">
+            <div class="wh-room-top" id="mapShelfH"></div>
+            <div class="wh-room-mid">
+              <div class="wh-room-side" id="mapShelfG"></div>
+              <div class="wh-room-floor"></div>
+              <div class="wh-room-side" id="mapShelfI"></div>
+            </div>
+          </div>
+          <div class="wh-door-row wh-door-row-center">
+            <div class="wh-door">出入口</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -404,6 +444,9 @@
           <option value="">棚</option>
           <option value="A">A</option><option value="B">B</option><option value="C">C</option>
           <option value="D">D</option><option value="E">E</option><option value="F">F</option>
+          <option value="G">G（シンナー庫）</option>
+          <option value="H">H（シンナー庫）</option>
+          <option value="I">I（シンナー庫）</option>
         </select>
         <select class="form-select" id="variantTier">
           <option value="">段</option>
@@ -1106,31 +1149,41 @@ function renderProjectMasterList() {
 }
 
 // ---- Warehouse Map ----
-const SHELF_COLORS = {A:'#2980B9',B:'#27AE60',C:'#8E44AD',D:'#C0392B',E:'#E67E22',F:'#16A085'};
+const SHELF_COLORS = {A:'#2980B9',B:'#27AE60',C:'#8E44AD',D:'#C0392B',E:'#E67E22',F:'#16A085',
+                      G:'#7D3C98',H:'#A569BD',I:'#6C3483'};
+const THINNER_SHELVES = ['G','H','I'];
+
+function shelfTileHtml(shelf, compact) {
+  const svs = variants.filter(v=>v.shelf===shelf);
+  const total = svs.reduce((s,v)=>s+(v.stock||0),0);
+  const hasAlert = svs.some(v=>{
+    const p = paints.find(x=>x.id===v.paintId);
+    return (v.stock||0)<=(p?.reorder||3);
+  });
+  const count = compact ? `${svs.length}品/${total}缶` : `${svs.length}品目 / ${total}缶`;
+  return `<div class="wh-shelf" style="background:${SHELF_COLORS[shelf]||'#666'}" onclick="openShelfDetail('${shelf}')">
+    ${hasAlert?'<div class="wh-shelf-alert"></div>':''}
+    <div class="wh-shelf-label">${shelf}</div>
+    <div class="wh-shelf-count">${count}</div>
+  </div>`;
+}
+
 window.renderWarehouseMap = function() {
   [['DEF',['D','E','F']],['ABC',['A','B','C']]].forEach(([rowKey, shelves]) => {
     const el = document.getElementById('mapRow'+rowKey);
-    if (!el) return;
-    el.innerHTML = shelves.map(shelf => {
-      const svs = variants.filter(v=>v.shelf===shelf);
-      const total = svs.reduce((s,v)=>s+(v.stock||0),0);
-      const hasAlert = svs.some(v=>{
-        const p = paints.find(x=>x.id===v.paintId);
-        return (v.stock||0)<=(p?.reorder||3);
-      });
-      return `<div class="wh-shelf" style="background:${SHELF_COLORS[shelf]||'#666'}" onclick="openShelfDetail('${shelf}')">
-        ${hasAlert?'<div class="wh-shelf-alert"></div>':''}
-        <div class="wh-shelf-label">${shelf}</div>
-        <div class="wh-shelf-count">${svs.length}品目 / ${total}缶</div>
-      </div>`;
-    }).join('');
+    if (el) el.innerHTML = shelves.map(s=>shelfTileHtml(s,false)).join('');
+  });
+  THINNER_SHELVES.forEach(s => {
+    const el = document.getElementById('mapShelf'+s);
+    if (el) el.innerHTML = shelfTileHtml(s,true);
   });
 };
 
 window.openShelfDetail = function(shelf) {
   const svs = variants.filter(v=>v.shelf===shelf);
   const total = svs.reduce((s,v)=>s+(v.stock||0),0);
-  document.getElementById('shelfModalTitle').textContent = `棚 ${shelf} — ${svs.length}品目 / 合計${total}缶`;
+  const room = THINNER_SHELVES.includes(shelf) ? 'シンナー庫 ' : '';
+  document.getElementById('shelfModalTitle').textContent = `${room}棚 ${shelf} — ${svs.length}品目 / 合計${total}缶`;
   if (!svs.length) {
     document.getElementById('shelfTiers').innerHTML='<div class="empty">この棚に登録された塗料なし</div>';
     openModal('modalShelf'); return;
